@@ -1,0 +1,13 @@
+streamlit
+pandas
+numpy
+plotly
+scikit-learn
+matplotlib
+ortools
+langchain
+langchain-community
+faiss-cpu
+sentence-transformers
+pypdf
+python-dotenv
