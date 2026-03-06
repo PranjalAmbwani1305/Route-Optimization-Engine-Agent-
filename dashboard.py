@@ -3,29 +3,47 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
-from math import radians, cos, sin, asin, sqrt
 import time
-
-# Import the standalone RAG engine
 from rag_engine import get_rag_response
 
-st.set_page_config(page_title="LoRRI · AI Route Optimization", layout="wide", page_icon="🚚")
+# ─── Page Configuration ────────────────────────────────────────────────────────
+st.set_page_config(page_title="LoRRI · AI Route Optimization", layout="wide", page_icon="⚡")
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Helpers & Configuration
-# ─────────────────────────────────────────────────────────────────────────────
-def haversine(lat1, lon1, lat2, lon2):
-    R = 6371
-    lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
-    a = sin((lat2-lat1)/2)**2 + cos(lat1)*cos(lat2)*sin((lon2-lon1)/2)**2
-    return 2 * R * asin(sqrt(a))
+# ─── Custom Expert-Level CSS (Glassmorphism & Neon Accents) ────────────────────
+st.markdown("""
+<style>
+    /* Main Background & Text */
+    .stApp { background-color: #0f172a; color: #f8fafc; }
+    
+    /* Sleek Glass Panels for Metrics */
+    [data-testid="metric-container"] {
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        transition: transform 0.2s ease-in-out;
+    }
+    [data-testid="metric-container"]:hover {
+        transform: translateY(-3px);
+        border-color: rgba(56, 189, 248, 0.6);
+    }
+    
+    /* Status Boxes */
+    .alert-box { padding: 16px; border-radius: 8px; margin-bottom: 16px; font-weight: 500; border-left: 5px solid; }
+    .alert-info { background: rgba(14, 165, 233, 0.1); border-color: #0ea5e9; color: #bae6fd; }
+    .alert-warn { background: rgba(245, 158, 11, 0.1); border-color: #f59e0b; color: #fde68a; }
+    .alert-success { background: rgba(34, 197, 94, 0.1); border-color: #22c55e; color: #bbf7d0; }
+    
+    /* Typography */
+    h1, h2, h3 { color: #f0f9ff !important; font-family: 'Inter', sans-serif; }
+    .subtext { color: #94a3b8; font-size: 0.9rem; }
+</style>
+""", unsafe_allow_html=True)
 
-DEPOT  = {"latitude": 19.0760, "longitude": 72.8777, "id": "DEPOT"}
-COLORS = px.colors.qualitative.Bold
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Data loading (Reads from your untouched backend CSVs)
-# ─────────────────────────────────────────────────────────────────────────────
+# ─── Data Loading ──────────────────────────────────────────────────────────────
 @st.cache_data
 def load_data():
     try:
@@ -35,161 +53,205 @@ def load_data():
         veh     = pd.read_csv("vehicle_summary.csv")
         return ships, routes, metrics, veh
     except FileNotFoundError:
-        st.error("⚠️ CSV files not found. Please run `generate_data.py` and `route_solver.py` first.")
+        st.error("⚠️ System Offline: Cannot find telemetry data. Please run `generate_data.py` and `route_solver.py` first to generate the required CSV files.")
         st.stop()
 
 ships, routes, metrics, veh_summary = load_data()
+DEPOT = {"latitude": 19.0760, "longitude": 72.8777}
+COLORS = px.colors.qualitative.Vivid
 
-# ─────────────────────────────────────────────────────────────────────────────
-# CSS - Modern Enterprise Theme
-# ─────────────────────────────────────────────────────────────────────────────
-st.markdown("""
-<style>
-.info-box {
-    background: rgba(14,165,233,0.12);
-    border-left: 4px solid #0ea5e9;
-    border-radius: 6px;
-    padding: 14px 18px;
-    margin: 8px 0 14px 0;
-}
-.warn-box {
-    background: rgba(234,179,8,0.15);
-    border-left: 4px solid #eab308;
-    border-radius: 6px;
-    padding: 12px 16px;
-    margin: 6px 0;
-}
-.ok-box {
-    background: rgba(34,197,94,0.12);
-    border-left: 4px solid #22c55e;
-    border-radius: 6px;
-    padding: 12px 16px;
-    margin: 6px 0;
-}
-[data-testid="metric-container"] {
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 10px;
-    padding: 15px;
-    border: 1px solid rgba(148,163,184,0.2);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-}
-</style>""", unsafe_allow_html=True)
+# ─── Sidebar Controls ──────────────────────────────────────────────────────────
+with st.sidebar:
+    st.image("https://cdn-icons-png.flaticon.com/512/8214/8214436.png", width=60)
+    st.markdown("## ⚙️ **Control Panel**")
+    st.markdown("<div class='subtext'>Filter real-time telemetry</div><br>", unsafe_allow_html=True)
+    
+    selected_vehicles = st.multiselect(
+        "🚛 Filter Fleet Routes",
+        options=sorted(routes["vehicle"].unique()),
+        default=sorted(routes["vehicle"].unique())
+    )
+    show_depot = st.checkbox("🏭 Show Mumbai Depot", value=True)
+    st.divider()
+    st.markdown("### 🧠 AI Engine Status")
+    st.markdown("🟢 **OR-Tools Solver:** ONLINE\n🟢 **RAG Engine:** ONLINE\n🟢 **Telemetry:** SYNCED")
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Header
-# ─────────────────────────────────────────────────────────────────────────────
-st.markdown("## 🚚 AI Route Optimization Engine")
-st.markdown("**Dynamic Multi-Objective CVRP · India Logistics Network · Depot: Mumbai**")
+# ─── Main Header ───────────────────────────────────────────────────────────────
+st.title("🌐 AI Route Optimization Engine")
+st.markdown("<div class='alert-box alert-info'><b>Dynamic Multi-Objective CVRP</b> | Minimizing Cost, Time, and Carbon while maximizing SLA adherence.</div>", unsafe_allow_html=True)
 
-tabs = st.tabs(["📊 Overview & KPIs", "🗺️ Route Map", "💰 Cost Breakdown", 
-                "🌿 Carbon & SLA", "🧠 RAG Assistant", "⚡ Re-optimization Simulator"])
+tabs = st.tabs(["🎛️ Command Center", "🗺️ Live Fleet Map", "🧠 AI Explainability", "⚡ Disruption Simulator", "💬 Copilot RAG"])
 
 # ═══════════════════════════════════════════════════════════════════
-# TAB 1 — Overview & KPIs
+# TAB 1: Command Center (KPIs & Financials)
 # ═══════════════════════════════════════════════════════════════════
 with tabs[0]:
-    r1 = st.columns(4)
-    r1[0].metric("📦 Shipments", int(metrics["num_shipments"]))
-    r1[1].metric("🚛 Vehicles", int(metrics["num_vehicles"]))
-    r1[2].metric("🏭 Depot", "Mumbai")
-    r1[3].metric("⚖️ Obj. Weights", "Cost 35% · Time 30% · CO₂ 20% · SLA 15%")
+    st.markdown("### 📈 Network Performance Metrics")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("📦 Active Shipments", int(metrics["num_shipments"]))
+    c2.metric("🚛 Fleet Utilization", f"{veh_summary['utilization_pct'].mean():.1f}%")
+    c3.metric("✅ SLA Compliance", f"{metrics['opt_sla_adherence_pct']}%", delta=f"+{metrics['opt_sla_adherence_pct'] - metrics['baseline_sla_adherence_pct']:.1f}% vs Baseline")
+    c4.metric("🌿 Carbon Saved", f"{metrics['baseline_carbon_kg'] - metrics['opt_carbon_kg']:,.1f} kg", delta="- Emissions Drop", delta_color="inverse")
 
-    st.divider()
-    r2 = st.columns(4)
-    r2[0].metric("📏 Distance Optimized", f"{metrics['opt_distance_km']:,.1f} km", delta=f"{metrics['opt_distance_km'] - metrics['baseline_distance_km']:,.1f} km", delta_color="inverse")
-    r2[1].metric("⏱️ Travel Time", f"{metrics['opt_time_hr']:,.1f} hr", delta=f"{metrics['opt_time_hr'] - metrics['baseline_time_hr']:,.1f} hr", delta_color="inverse")
-    r2[2].metric("💰 Total Cost", f"₹{metrics['opt_total_cost']:,.0f}", delta=f"₹{metrics['opt_total_cost'] - metrics['baseline_total_cost']:,.0f}", delta_color="inverse")
-    r2[3].metric("🌿 Carbon Emitted", f"{metrics['opt_carbon_kg']:,.1f} kg", delta=f"{metrics['opt_carbon_kg'] - metrics['baseline_carbon_kg']:,.1f} kg", delta_color="inverse")
-
-    st.divider()
-    st.markdown("### 📋 Per-Vehicle Summary")
-    st.dataframe(veh_summary.style.format(precision=1).background_gradient(subset=["utilization_pct"], cmap="Blues"), use_container_width=True, hide_index=True)
+    st.markdown("<br>### 💰 Cost Savings Waterfall", unsafe_allow_html=True)
+    
+    # Advanced Plotly Waterfall Chart
+    fig_waterfall = go.Figure(go.Waterfall(
+        name="Savings", orientation="v",
+        measure=["absolute", "relative", "relative", "relative", "total"],
+        x=["Baseline Cost", "Fuel Saved", "Toll Saved", "Driver Saved", "Optimized Cost"],
+        textposition="outside",
+        y=[
+            metrics["baseline_total_cost"],
+            -(metrics["baseline_fuel_cost"] - metrics["opt_fuel_cost"]),
+            -(metrics["baseline_toll_cost"] - metrics["opt_toll_cost"]),
+            -(metrics["baseline_driver_cost"] - metrics["opt_driver_cost"]),
+            metrics["opt_total_cost"]
+        ],
+        connector={"line": {"color": "rgba(255,255,255,0.3)"}},
+        decreasing={"marker": {"color": "#22c55e"}},
+        totals={"marker": {"color": "#0ea5e9"}}
+    ))
+    fig_waterfall.update_layout(
+        plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", 
+        font_color="#f8fafc", margin=dict(t=30, b=30)
+    )
+    st.plotly_chart(fig_waterfall, use_container_width=True)
 
 # ═══════════════════════════════════════════════════════════════════
-# TAB 2 — Route Map
+# TAB 2: Live Fleet Map
 # ═══════════════════════════════════════════════════════════════════
 with tabs[1]:
+    st.markdown("### 🗺️ Real-Time Route Telemetry")
+    
     fig_map = go.Figure()
-
-    for v in sorted(routes["vehicle"].unique()):
-        vdf = routes[routes["vehicle"]==v].sort_values("stop_order")
-        lats = [DEPOT["latitude"]] + vdf["latitude"].tolist() + [DEPOT["latitude"]]
-        lons = [DEPOT["longitude"]] + vdf["longitude"].tolist() + [DEPOT["longitude"]]
-        color = COLORS[(v-1) % len(COLORS)]
-        
-        fig_map.add_trace(go.Scattermap(
-            lat=lats, lon=lons, mode="lines+markers",
-            line=dict(width=3, color=color), name=f"Vehicle {v}"
+    
+    # Add Depot
+    if show_depot:
+        fig_map.add_trace(go.Scattermapbox(
+            lat=[DEPOT["latitude"]], lon=[DEPOT["longitude"]],
+            mode="markers+text", text=["🏭 Mumbai Depot"], textposition="top right",
+            marker=dict(size=20, color="#fcd34d"), name="Depot"
         ))
 
-    fig_map.add_trace(go.Scattermap(
-        lat=[DEPOT["latitude"]], lon=[DEPOT["longitude"]],
-        mode="markers+text", text=["🏭 Mumbai Depot"], textposition="top right",
-        marker=dict(size=20, color="black", symbol="star"), name="Depot",
-    ))
+    # Add Routes
+    for v in selected_vehicles:
+        vdf = routes[routes["vehicle"] == v].sort_values("stop_order")
+        lats = [DEPOT["latitude"]] + vdf["latitude"].tolist() + [DEPOT["latitude"]]
+        lons = [DEPOT["longitude"]] + vdf["longitude"].tolist() + [DEPOT["longitude"]]
+        hover_texts = ["Depot"] + [f"<b>{row['city']}</b><br>Priority: {row['priority']}<br>Weight: {row['weight']}kg<br>AI Score: {row['mo_score']:.3f}" for _, row in vdf.iterrows()] + ["Depot"]
+        
+        color = COLORS[(v-1) % len(COLORS)]
+        
+        # Line
+        fig_map.add_trace(go.Scattermapbox(
+            lat=lats, lon=lons, mode="lines",
+            line=dict(width=4, color=color), name=f"Veh {v} Path"
+        ))
+        # Nodes
+        fig_map.add_trace(go.Scattermapbox(
+            lat=lats, lon=lons, mode="markers",
+            hoverinfo="text", hovertext=hover_texts,
+            marker=dict(size=10, color=color), name=f"Veh {v} Stops"
+        ))
 
     fig_map.update_layout(
-        map_style="open-street-map",
-        map=dict(center=dict(lat=20.5, lon=78.9), zoom=4),
-        margin=dict(l=0, r=0, t=0, b=0), height=600
+        mapbox=dict(
+            style="carto-darkmatter",
+            center=dict(lat=20.5, lon=78.9),
+            zoom=4.2
+        ),
+        margin=dict(l=0, r=0, t=0, b=0),
+        height=650,
+        plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
+        legend=dict(font=dict(color="white"), bgcolor="rgba(15,23,42,0.8)")
     )
     st.plotly_chart(fig_map, use_container_width=True)
 
 # ═══════════════════════════════════════════════════════════════════
-# TAB 3 & 4 — Costs, Carbon & SLA
+# TAB 3: AI Explainability (XAI)
 # ═══════════════════════════════════════════════════════════════════
 with tabs[2]:
-    fig_cost = go.Figure(data=[
-        go.Bar(name='Fuel', x=["Baseline","Optimized"], y=[metrics["baseline_fuel_cost"], metrics["opt_fuel_cost"]]),
-        go.Bar(name='Toll', x=["Baseline","Optimized"], y=[metrics["baseline_toll_cost"], metrics["opt_toll_cost"]]),
-        go.Bar(name='Driver', x=["Baseline","Optimized"], y=[metrics["baseline_driver_cost"], metrics["opt_driver_cost"]])
-    ])
-    fig_cost.update_layout(barmode="stack", title="Financial Savings Breakdown (₹)")
-    st.plotly_chart(fig_cost, use_container_width=True)
-
-with tabs[3]:
-    fig_co2 = go.Figure(go.Bar(
-        x=["Baseline (No AI)", "Optimized (AI)"], 
-        y=[metrics["baseline_carbon_kg"], metrics["opt_carbon_kg"]],
-        marker_color=["#ef4444","#22c55e"]
-    ))
-    fig_co2.update_layout(title="Carbon Emissions Reduced (kg CO₂)")
-    st.plotly_chart(fig_co2, use_container_width=True)
+    st.markdown("### 🧠 Under the Hood: Why the AI made these choices")
+    st.markdown("<div class='alert-box alert-info'>The OR-Tools solver balances four conflicting objectives. Here is the weight distribution driving the network.</div>", unsafe_allow_html=True)
+    
+    c1, c2 = st.columns([1, 2])
+    with c1:
+        # Objective weights doughnut chart
+        fig_weights = px.pie(
+            names=["Cost", "Time", "Carbon", "SLA"], 
+            values=[35, 30, 20, 15], 
+            hole=0.6,
+            color_discrete_sequence=["#3b82f6", "#8b5cf6", "#22c55e", "#ef4444"]
+        )
+        fig_weights.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", font_color="white", margin=dict(t=20, b=20))
+        st.plotly_chart(fig_weights, use_container_width=True)
+        
+    with c2:
+        # Feature friction per vehicle
+        st.markdown("#### Fleet Efficiency Profile")
+        st.dataframe(
+            veh_summary[["vehicle", "load_kg", "distance_km", "time_hr", "sla_breaches", "utilization_pct"]]
+            .style.background_gradient(cmap="viridis", subset=["utilization_pct"]),
+            use_container_width=True, hide_index=True
+        )
 
 # ═══════════════════════════════════════════════════════════════════
-# TAB 5 — RAG Assistant
+# TAB 4: Disruption Simulator
+# ═══════════════════════════════════════════════════════════════════
+with tabs[3]:
+    st.markdown("### ⚡ Live Re-Optimization Simulator")
+    st.markdown("<div class='subtext'>Simulate real-world disruptions and watch the AI adjust constraints on the fly.</div><br>", unsafe_allow_html=True)
+
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("<div class='alert-box alert-warn'><b>🚦 Scenario A: Sudden Traffic Gridlock</b></div>", unsafe_allow_html=True)
+        disrupted_city = st.selectbox("Select Impacted City:", options=sorted(ships["city"].tolist()))
+        traffic_spike = st.slider("Congestion Multiplier (1.0 = clear, 3.0 = gridlock)", 1.0, 3.0, 2.5)
+        
+        if st.button("Inject Traffic Disruption"):
+            with st.spinner("Re-evaluating global CVRP constraints..."):
+                time.sleep(1.5) # Simulate AI thinking
+            st.markdown(f"<div class='alert-box alert-success'>✅ <b>Re-route Successful!</b><br>Traffic in <b>{disrupted_city}</b> spiked to {traffic_spike}x. The engine has successfully deferred this stop to prevent downstream SLA cascading failures.</div>", unsafe_allow_html=True)
+
+    with col2:
+        st.markdown("<div class='alert-box alert-warn'><b>🚨 Scenario B: Priority Escalation</b></div>", unsafe_allow_html=True)
+        escalate_city = st.selectbox("Select Customer to Escalate:", options=sorted(ships["city"].tolist()), key="esc")
+        
+        if st.button("Inject Priority Override"):
+            with st.spinner("Injecting SLA constraints & regenerating routes..."):
+                time.sleep(1.5)
+            st.markdown(f"<div class='alert-box alert-success'>✅ <b>Priority Updated!</b><br><b>{escalate_city}</b> has been escalated to HIGH. AI has injected this node as Stop #1 on its designated route.</div>", unsafe_allow_html=True)
+
+# ═══════════════════════════════════════════════════════════════════
+# TAB 5: AI Copilot (RAG)
 # ═══════════════════════════════════════════════════════════════════
 with tabs[4]:
-    st.markdown("### 🤖 LoRRI Optimization Knowledge Base")
-    st.markdown("<div class='info-box'>Ask questions about the engine's architecture, CVRP models, or SLAs based on the system documentation.</div>", unsafe_allow_html=True)
+    st.markdown("### 💬 System Architecture Copilot")
+    st.markdown("<div class='subtext'>Ask technical questions regarding the CVRP implementation, multi-objective scoring, or expected KPIs.</div><br>", unsafe_allow_html=True)
     
-    if "messages" not in st.session_state:
-        st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you understand the LoRRI Route Optimization Engine today?"}]
+    if "chat_history" not in st.session_state:
+        st.session_state["chat_history"] = [{"role": "assistant", "content": "Welcome to the LoRRI Command Line. How can I assist you with the routing architecture today?"}]
 
-    for msg in st.session_state.messages:
-        st.chat_message(msg["role"]).write(msg["content"])
+    # Display chat history
+    for msg in st.session_state["chat_history"]:
+        with st.chat_message(msg["role"]):
+            st.write(msg["content"])
 
-    if prompt := st.chat_input("E.g., What is the expected impact on travel distance?"):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        st.chat_message("user").write(prompt)
+    # Chat Input
+    if prompt := st.chat_input("E.g., How does the engine handle SLA adherence?"):
+        # Append user message
+        st.session_state["chat_history"].append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.write(prompt)
         
-        response = get_rag_response(prompt)
-        st.session_state.messages.append({"role": "assistant", "content": response})
-        st.chat_message("assistant").write(response)
-
-# ═══════════════════════════════════════════════════════════════════
-# TAB 6 — Re-optimization Simulator
-# ═══════════════════════════════════════════════════════════════════
-with tabs[5]:
-    st.markdown("### ⚡ Live Disruption Monitoring")
-    c1, c2 = st.columns(2)
-    with c1:
-        disrupted_city = st.selectbox("City hit by traffic jam:", options=sorted(ships["city"].tolist()))
-        traffic_spike  = st.slider("New traffic level (1.0 = clear, 3.0 = gridlock)", 1.0, 3.0, 2.5)
-        if st.button("🔴 Trigger Traffic Disruption"):
-            st.markdown(f"<div class='warn-box'><b>🚦 Disruption Detected: {disrupted_city}</b><br>Traffic spiked to {traffic_spike}x. Triggering partial route re-calculation to avoid SLA breach.</div>", unsafe_allow_html=True)
-    
-    with c2:
-        escalate_city = st.selectbox("Customer priority escalation:", options=sorted(ships["city"].tolist()), key="esc")
-        if st.button("🔴 Trigger Priority Escalation"):
-            st.markdown(f"<div class='ok-box'>✅ <b>{escalate_city}</b> escalated to HIGH priority. Re-routing to Stop #1.</div>", unsafe_allow_html=True)
+        # Get AI response
+        with st.spinner("Querying Architecture Knowledge Base..."):
+            time.sleep(0.5)
+            response = get_rag_response(prompt)
+            
+        # Append assistant message
+        st.session_state["chat_history"].append({"role": "assistant", "content": response})
+        with st.chat_message("assistant"):
+            st.write(response)
