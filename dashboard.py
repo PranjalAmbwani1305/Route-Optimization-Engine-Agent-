@@ -464,7 +464,6 @@ if pg == "🏢 About LoRRI":
 # ══════════════════════════════════════════════════════════════════════════════
 # PAGE: AI ASSISTANT  —  Vectorless RAG + LangChain-style Pipeline
 #                         + Pandas Retrieval + Rule-Based Router
-#                         + Clickable Chip Buttons
 # ══════════════════════════════════════════════════════════════════════════════
 elif pg == "🤖 LoRRI AI Assistant":
 
@@ -473,166 +472,6 @@ elif pg == "🤖 LoRRI AI Assistant":
         "Vectorless RAG · LangChain-style Pipeline · Pandas Retrieval · Rule-Based Router"
     )
 
-    # ── SESSION STATE INITIALIZATION ─────────────────
-    if "msgs" not in st.session_state:
-        st.session_state.msgs = []
-
-    if "chip_prompt" not in st.session_state:
-        st.session_state.chip_prompt = None
-
-
-    # ── CHIP QUESTIONS ───────────────────────────────
-    CHIP_QUESTIONS = [
-        ("What is LoRRI?", "🏢"),
-        ("How much did we save in ₹?", "💰"),
-        ("Which cities were late?", "⚠️"),
-        ("Which truck costs most?", "🚛"),
-        ("Truck 3 route?", "🗺️"),
-        ("Carbon savings?", "🌿"),
-        ("Explain why Truck 3 route changed", "🧠"),
-        ("Predict tomorrow's traffic risk", "🚦"),
-        ("Suggest cost saving actions", "💡"),
-        ("Contact LogisticsNow", "📞"),
-    ]
-
-    st.markdown("### 💡 Click to ask")
-
-    chip_cols = st.columns(5)
-
-    chip_clicked = False
-
-    for idx, (question, emoji) in enumerate(CHIP_QUESTIONS):
-        with chip_cols[idx % 5]:
-            if st.button(f"{emoji} {question}", key=f"chip_{idx}"):
-                st.session_state.chip_prompt = question
-                chip_clicked = True
-
-    if chip_clicked:
-        st.rerun()
-
-
-    # ── INITIAL MESSAGE ──────────────────────────────
-    if not st.session_state.msgs:
-        with st.chat_message("assistant"):
-            st.markdown(
-                f"""
-**Namaste! 🙏 Welcome to the LoRRI Intelligence Assistant**
-
-I use a **4-step RAG pipeline**:
-
-⚡ Rule Router → 📚 RAG Retriever → 🐼 Pandas Query → 🤖 LLM Synthesis
-
-Fleet snapshot:
-- Shipments: **{opt['n_ships']}**
-- Trucks: **{opt['n_vehicles']}**
-- Cost: **₹{opt['total_cost']:,.0f}**
-- SLA: **{opt['sla_pct']:.0f}%**
-
-Click a chip above or type your question below.
-"""
-            )
-
-
-    # ── DISPLAY CHAT HISTORY ─────────────────────────
-    for m in st.session_state.msgs:
-
-        with st.chat_message(m["role"]):
-
-            st.markdown(m["content"])
-
-
-    # ── CHAT INPUT ───────────────────────────────────
-    typed_prompt = st.chat_input(
-        "Ask about LoRRI, fleet data, ₹ costs, routes, SLA...",
-        key="lorri_chat_input"
-    )
-
-    final_prompt = st.session_state.pop("chip_prompt", None)
-
-    if typed_prompt:
-        final_prompt = typed_prompt
-
-
-    # ── PROCESS QUERY ────────────────────────────────
-    if final_prompt:
-
-        st.session_state.msgs.append(
-            {"role": "user", "content": final_prompt}
-        )
-
-        with st.chat_message("user"):
-            st.markdown(final_prompt)
-
-
-        api_history = [
-            {"role": m["role"], "content": m["content"]}
-            for m in st.session_state.msgs[-10:]
-        ]
-
-
-        with st.chat_message("assistant"):
-
-            with st.spinner("Running RAG pipeline..."):
-
-                reply, conf, source, chunks = call_rag_pipeline(
-                    final_prompt,
-                    api_history
-                )
-
-            st.markdown(reply)
-
-
-        st.session_state.msgs.append(
-            {
-                "role": "assistant",
-                "content": reply,
-                "meta": {
-                    "conf": conf,
-                    "source": source,
-                    "chunks": chunks
-                }
-            }
-        )
-
-        st.rerun()
-
-
-    # ── CLEAR CHAT BUTTON ────────────────────────────
-    if st.session_state.msgs:
-
-        st.markdown("---")
-
-        if st.button("🗑 Clear conversation"):
-
-            st.session_state.msgs = []
-
-            st.rerun()
-            
-    # ── FOOTER (PLACED LAST) ────────────────────────────────────────────────
-    
-
-    st.markdown(f"""
-    <div style="margin-top:40px;">
-
-        <div style="background:{LN_NAVY};color:white;padding:18px 28px;
-        border-radius:10px;display:flex;justify-content:space-between;align-items:center;">
-
-            <div>
-                <b>Logistics<span style="color:{LN_GREEN};">Now</span></b> · LoRRI AI Route Optimization Engine
-                <div style="font-size:0.8rem;color:#94a3b8;">
-                Problem Statement 4 · Synapflow Hackathon
-                </div>
-            </div>
-
-            <div style="font-size:0.85rem;color:#cbd5e1;">
-                📧 connect@logisticsnow.in
-            </div>
-
-        </div>
-
-        
-    </div>
-    """, unsafe_allow_html=True)
     # ════════════════════════════════════════════════════════════════════════
     # ① RAG KNOWLEDGE BASE  (plain-text chunks — no vectors needed)
     # ════════════════════════════════════════════════════════════════════════
@@ -644,13 +483,14 @@ Click a chip above or type your question below.
         5: "Mumbai → Hubli → Mangalore → Bengaluru",
     }
 
-    # Static knowledge chunks — each has a list of keyword triggers
     KNOWLEDGE_CHUNKS = [
         {
             "id": "company",
-            "triggers": ["logisticsnow","company","about","who","contact","email","phone","website","lorri"],
+            "triggers": ["logisticsnow", "company", "about", "who", "contact", "email",
+                         "phone", "website", "lorri"],
             "text": (
-                "COMPANY: LogisticsNow (logisticsnow.in) | connect@logisticsnow.in | +91-9867773508 / +91-9653620207\n"
+                "COMPANY: LogisticsNow (logisticsnow.in) | connect@logisticsnow.in "
+                "| +91-9867773508 / +91-9653620207\n"
                 "LoRRI = Logistics Rating & Intelligence — India's premier logistics intelligence platform.\n"
                 "Connects Shippers/Manufacturers with Carriers/Transporters through data-driven insights.\n"
                 "For Shippers: carrier profiles, industry ratings, cost savings, risk reduction.\n"
@@ -659,7 +499,8 @@ Click a chip above or type your question below.
         },
         {
             "id": "optimization",
-            "triggers": ["cvrp","optimize","optimization","weighted","objective","weight","score","solver","ortools","heuristic","algorithm"],
+            "triggers": ["cvrp", "optimize", "optimization", "weighted", "objective",
+                         "weight", "score", "solver", "ortools", "heuristic", "algorithm"],
             "text": (
                 "OPTIMIZATION ENGINE: Capacitated Vehicle Routing Problem (CVRP) framework.\n"
                 "Weighted objective: Cost ₹ (35%) + Travel Time (30%) + Carbon CO₂ (20%) + SLA (15%).\n"
@@ -670,7 +511,8 @@ Click a chip above or type your question below.
         },
         {
             "id": "pricing",
-            "triggers": ["fuel","toll","driver","cost","price","₹","inr","rupee","penalty","sla penalty","wage"],
+            "triggers": ["fuel", "toll", "driver", "cost", "price", "₹", "inr",
+                         "rupee", "penalty", "sla penalty", "wage"],
             "text": (
                 "PRICING MODEL (all in ₹ INR):\n"
                 "- Fuel: ₹12 per km\n"
@@ -681,7 +523,8 @@ Click a chip above or type your question below.
         },
         {
             "id": "sla",
-            "triggers": ["sla","late","breach","delay","on time","delivery","promise","window","24hr","48hr","72hr","adherence"],
+            "triggers": ["sla", "late", "breach", "delay", "on time", "delivery",
+                         "promise", "window", "24hr", "48hr", "72hr", "adherence"],
             "text": (
                 f"SLA PERFORMANCE:\n"
                 f"- Optimized SLA adherence: {opt['sla_pct']:.1f}% (baseline was only {base['sla_pct']:.0f}%)\n"
@@ -693,35 +536,41 @@ Click a chip above or type your question below.
         },
         {
             "id": "carbon",
-            "triggers": ["carbon","co2","emission","green","environment","sustainability","pollution","tree","car","eco"],
+            "triggers": ["carbon", "co2", "emission", "green", "environment",
+                         "sustainability", "pollution", "tree", "eco"],
             "text": (
                 f"CARBON & SUSTAINABILITY:\n"
                 f"- Optimized CO₂: {opt['carbon_kg']:,.1f} kg\n"
                 f"- Baseline CO₂: {base['carbon_kg']:,.1f} kg\n"
-                f"- CO₂ saved: {base['carbon_kg']-opt['carbon_kg']:,.1f} kg ({(base['carbon_kg']-opt['carbon_kg'])/base['carbon_kg']*100:.1f}% reduction)\n"
-                f"- Equivalent trees planted: {int((base['carbon_kg']-opt['carbon_kg'])/21):,}\n"
-                f"- Cars removed from road equivalent: {int((base['carbon_kg']-opt['carbon_kg'])/2400)}"
+                f"- CO₂ saved: {base['carbon_kg'] - opt['carbon_kg']:,.1f} kg "
+                f"({(base['carbon_kg'] - opt['carbon_kg']) / base['carbon_kg'] * 100:.1f}% reduction)\n"
+                f"- Equivalent trees planted: {int((base['carbon_kg'] - opt['carbon_kg']) / 21):,}\n"
+                f"- Cars removed from road equivalent: {int((base['carbon_kg'] - opt['carbon_kg']) / 2400)}"
             ),
         },
         {
             "id": "fleet_summary",
-            "triggers": ["fleet","total","summary","overall","run","depot","mumbai","shipment","truck","vehicle","save","saving","saved","baseline","optimized"],
+            "triggers": ["fleet", "total", "summary", "overall", "run", "depot",
+                         "mumbai", "shipment", "truck", "vehicle", "save", "saving",
+                         "saved", "baseline", "optimized"],
             "text": (
                 f"FLEET SUMMARY (Mumbai Depot):\n"
                 f"- Shipments: {opt['n_ships']} | Trucks: {opt['n_vehicles']}\n"
                 f"- Optimized total cost: {inr(opt['total_cost'])}\n"
                 f"- Baseline total cost: {inr(base['total_cost'])}\n"
-                f"- Total saved: {inr(base['total_cost']-opt['total_cost'])} "
-                f"({(base['total_cost']-opt['total_cost'])/base['total_cost']*100:.1f}% reduction)\n"
-                f"- Fuel saved: {inr(base['fuel_cost']-opt['fuel_cost'])}\n"
-                f"- Toll saved: {inr(base['toll_cost']-opt['toll_cost'])}\n"
-                f"- Driver cost saved: {inr(base['driver_cost']-opt['driver_cost'])}\n"
-                f"- Distance optimized: {opt['distance_km']:,.0f} km (baseline {base['distance_km']:,.0f} km)"
+                f"- Total saved: {inr(base['total_cost'] - opt['total_cost'])} "
+                f"({(base['total_cost'] - opt['total_cost']) / base['total_cost'] * 100:.1f}% reduction)\n"
+                f"- Fuel saved: {inr(base['fuel_cost'] - opt['fuel_cost'])}\n"
+                f"- Toll saved: {inr(base['toll_cost'] - opt['toll_cost'])}\n"
+                f"- Driver cost saved: {inr(base['driver_cost'] - opt['driver_cost'])}\n"
+                f"- Distance optimized: {opt['distance_km']:,.0f} km "
+                f"(baseline {base['distance_km']:,.0f} km)"
             ),
         },
         {
             "id": "traffic",
-            "triggers": ["traffic","jam","congestion","disruption","reoptimize","re-optimize","threshold","spike","delay","multiplier"],
+            "triggers": ["traffic", "jam", "congestion", "disruption", "reoptimize",
+                         "re-optimize", "threshold", "spike", "delay", "multiplier"],
             "text": (
                 "TRAFFIC & RE-OPTIMIZATION:\n"
                 "- Re-optimization triggers when traffic causes >30% travel time increase\n"
@@ -733,7 +582,8 @@ Click a chip above or type your question below.
         },
         {
             "id": "cost_saving_actions",
-            "triggers": ["suggest","recommendation","action","improve","reduce cost","save more","tip","advice","how to","better","optimize further"],
+            "triggers": ["suggest", "recommendation", "action", "improve", "reduce cost",
+                         "save more", "tip", "advice", "how to", "better", "optimize further"],
             "text": (
                 "COST SAVING RECOMMENDATIONS:\n"
                 "1. Consolidate Truck 2 & 5 loads — both under 70% utilization, merge short corridors\n"
@@ -747,17 +597,40 @@ Click a chip above or type your question below.
     ]
 
     # ════════════════════════════════════════════════════════════════════════
-    # ② PANDAS RETRIEVAL  — structured data queries over DataFrames
+    # ② VECTORLESS RAG RETRIEVER — BM25-lite keyword scoring (no embeddings)
+    # ════════════════════════════════════════════════════════════════════════
+    def rag_retrieve(query: str, top_k: int = 3) -> str:
+        """
+        Retrieve the most relevant knowledge chunks using keyword overlap scoring.
+        No vectors, no embeddings — pure BM25-lite token matching.
+        Returns concatenated chunk texts for the top_k matches.
+        """
+        q_lower = query.lower()
+        scored = []
+        for chunk in KNOWLEDGE_CHUNKS:
+            score = 0
+            for trigger in chunk["triggers"]:
+                if trigger in q_lower:
+                    # Weight multi-word triggers higher (more specific)
+                    score += 2 if len(trigger.split()) > 1 else 1
+            scored.append((score, chunk))
+
+        scored.sort(key=lambda x: -x[0])
+        top_chunks = [c["text"] for score, c in scored[:top_k] if score > 0]
+        return "\n\n---\n\n".join(top_chunks) if top_chunks else ""
+
+    # ════════════════════════════════════════════════════════════════════════
+    # ③ PANDAS RETRIEVAL — structured DataFrame queries
     # ════════════════════════════════════════════════════════════════════════
     def pandas_retrieve(query: str) -> str:
         """
         LangChain-style Pandas retrieval tool.
-        Returns a formatted string of structured data relevant to the query.
+        Returns formatted string of structured data relevant to the query.
         """
         q = query.lower()
         results = []
 
-        # Truck-specific query
+        # ── Truck-specific query ──────────────────────────────────────────
         for v in [1, 2, 3, 4, 5]:
             if f"truck {v}" in q or f"truck{v}" in q:
                 row = veh_sum[veh_sum["vehicle"] == v]
@@ -784,19 +657,23 @@ Click a chip above or type your question below.
                         f"\nSTOP-BY-STOP:\n" + stops_df.to_string(index=False)
                     )
 
-        # City-level SLA breach detail
+        # ── SLA breach cities ─────────────────────────────────────────────
         if any(kw in q for kw in ["late", "breach", "which cities", "missed", "sla breach"]):
             breach_df = routes[routes["sla_breach_hr"] > 0][
                 ["vehicle", "city", "priority", "sla_breach_hr", "sla_penalty"]
             ].copy()
             if not breach_df.empty:
                 breach_df["vehicle"] = breach_df["vehicle"].apply(lambda v: f"Truck {v}")
-                results.append("SLA BREACH DETAIL (cities that were late):\n" + breach_df.to_string(index=False))
+                results.append(
+                    "SLA BREACH DETAIL (cities that were late):\n"
+                    + breach_df.to_string(index=False)
+                )
             else:
                 results.append("SLA BREACHES: None — all deliveries were on time ✅")
 
-        # Most expensive / cheapest truck
-        if any(kw in q for kw in ["most expensive", "highest cost", "most costly", "expensive truck", "costs most"]):
+        # ── Most expensive truck ──────────────────────────────────────────
+        if any(kw in q for kw in ["most expensive", "highest cost", "most costly",
+                                   "expensive truck", "costs most"]):
             top = veh_sum.loc[veh_sum["total_cost"].idxmax()]
             results.append(
                 f"MOST EXPENSIVE TRUCK: Truck {int(top['vehicle'])} "
@@ -806,22 +683,30 @@ Click a chip above or type your question below.
                 f"Driver {inr(top['driver_cost'])} | SLA Penalty {inr(top['sla_penalty'])}"
             )
 
-        # Utilization analysis
-        if any(kw in q for kw in ["utilization", "utilisation", "capacity", "load", "full", "empty"]):
+        # ── Fleet utilization ─────────────────────────────────────────────
+        if any(kw in q for kw in ["utilization", "utilisation", "capacity", "load",
+                                   "full", "empty"]):
             util_df = veh_sum[["vehicle", "load_kg", "utilization_pct"]].copy()
             util_df["vehicle"] = util_df["vehicle"].apply(lambda v: f"Truck {v}")
             results.append(
-                "FLEET UTILIZATION:\n" + util_df.to_string(index=False) +
-                f"\nAverage utilization: {veh_sum['utilization_pct'].mean():.1f}%"
+                "FLEET UTILIZATION:\n" + util_df.to_string(index=False)
+                + f"\nAverage utilization: {veh_sum['utilization_pct'].mean():.1f}%"
             )
 
-        # Top carbon emitters by city
-        if any(kw in q for kw in ["carbon city", "top emitter", "most co2", "pollut", "city carbon"]):
-            top_co2 = routes.groupby("city")["carbon_kg"].sum().sort_values(ascending=False).head(5)
+        # ── Top carbon cities ─────────────────────────────────────────────
+        if any(kw in q for kw in ["carbon city", "top emitter", "most co2",
+                                   "pollut", "city carbon"]):
+            top_co2 = (
+                routes.groupby("city")["carbon_kg"]
+                .sum()
+                .sort_values(ascending=False)
+                .head(5)
+            )
             results.append("TOP 5 CITIES BY CO₂ EMISSION:\n" + top_co2.to_string())
 
-        # Cost comparison all trucks
-        if any(kw in q for kw in ["compare truck", "all truck", "each truck", "per truck", "breakdown"]):
+        # ── All-truck comparison ──────────────────────────────────────────
+        if any(kw in q for kw in ["compare truck", "all truck", "each truck",
+                                   "per truck", "breakdown"]):
             cmp = veh_sum[["vehicle", "distance_km", "total_cost", "carbon_kg",
                            "sla_breaches", "utilization_pct"]].copy()
             cmp["vehicle"] = cmp["vehicle"].apply(lambda v: f"Truck {v}")
@@ -831,38 +716,17 @@ Click a chip above or type your question below.
         return "\n\n".join(results) if results else ""
 
     # ════════════════════════════════════════════════════════════════════════
-    # ③ VECTORLESS RAG RETRIEVER  — keyword-based chunk scoring
-    # ════════════════════════════════════════════════════════════════════════
-    def rag_retrieve(query: str, top_k: int = 3) -> str:
-        """
-        Retrieve the most relevant knowledge chunks using keyword overlap scoring.
-        No vectors, no embeddings — pure token matching (BM25-lite).
-        """
-        q_tokens = set(query.lower().split())
-        scored = []
-        for chunk in KNOWLEDGE_CHUNKS:
-            # Score = number of trigger keywords found in query
-            score = sum(1 for t in chunk["triggers"] if t in query.lower())
-            # Bonus for exact multi-word trigger match
-            score += sum(2 for t in chunk["triggers"] if len(t.split()) > 1 and t in query.lower())
-            scored.append((score, chunk))
-
-        scored.sort(key=lambda x: -x[0])
-        top = [c["text"] for score, c in scored[:top_k] if score > 0]
-        return "\n\n---\n\n".join(top) if top else ""
-
-    # ════════════════════════════════════════════════════════════════════════
-    # ④ RULE-BASED ROUTER  — fast answers without LLM for simple queries
+    # ④ RULE-BASED ROUTER — instant answers for known patterns (no LLM call)
     # ════════════════════════════════════════════════════════════════════════
     def rule_based_answer(query: str):
         """
-        LangChain-style RouterChain equivalent.
-        Returns (answer_str, confidence) for known patterns, else (None, None).
+        RouterChain equivalent. Returns (answer_str, confidence) for known
+        patterns, else (None, None) to fall through to the LLM.
         """
         q = query.lower().strip()
 
         # Greeting
-        if any(q == g for g in ["hi", "hello", "hey", "namaste", "hii", "hlo"]):
+        if q in {"hi", "hello", "hey", "namaste", "hii", "hlo"}:
             return (
                 f"**Namaste! 🙏**\n\nI'm the LoRRI AI Assistant. "
                 f"I have full access to your fleet data — **{opt['n_ships']} shipments**, "
@@ -871,8 +735,9 @@ Click a chip above or type your question below.
                 99,
             )
 
-        # Contact
-        if any(kw in q for kw in ["contact", "email", "phone", "number", "reach", "logisticsnow.in"]):
+        # Contact info
+        if any(kw in q for kw in ["contact", "email", "phone", "number",
+                                   "reach", "logisticsnow.in"]):
             return (
                 "**LogisticsNow Contact Details:**\n\n"
                 "- 🌐 Website: logisticsnow.in\n"
@@ -881,81 +746,104 @@ Click a chip above or type your question below.
                 99,
             )
 
-        # Total savings (exact)
-        if any(kw in q for kw in ["how much", "total saving", "total cost saving", "how much did we save", "save in"]):
+        # Total savings
+        if any(kw in q for kw in ["how much did we save", "total saving",
+                                   "total cost saving", "save in ₹", "save in inr"]):
             saved = base["total_cost"] - opt["total_cost"]
             pct   = saved / base["total_cost"] * 100
             return (
                 f"**Total Cost Savings: {inr(saved)} ({pct:.1f}% reduction)**\n\n"
                 f"| Category | Baseline | Optimized | Saved |\n"
                 f"|---|---|---|---|\n"
-                f"| ⛽ Fuel | {inr(base['fuel_cost'])} | {inr(opt['fuel_cost'])} | **{inr(base['fuel_cost']-opt['fuel_cost'])}** |\n"
-                f"| 🛣️ Toll | {inr(base['toll_cost'])} | {inr(opt['toll_cost'])} | **{inr(base['toll_cost']-opt['toll_cost'])}** |\n"
-                f"| 👷 Driver | {inr(base['driver_cost'])} | {inr(opt['driver_cost'])} | **{inr(base['driver_cost']-opt['driver_cost'])}** |\n"
-                f"| 💰 **Total** | {inr(base['total_cost'])} | {inr(opt['total_cost'])} | **{inr(saved)}** |",
+                f"| ⛽ Fuel | {inr(base['fuel_cost'])} | {inr(opt['fuel_cost'])} "
+                f"| **{inr(base['fuel_cost'] - opt['fuel_cost'])}** |\n"
+                f"| 🛣️ Toll | {inr(base['toll_cost'])} | {inr(opt['toll_cost'])} "
+                f"| **{inr(base['toll_cost'] - opt['toll_cost'])}** |\n"
+                f"| 👷 Driver | {inr(base['driver_cost'])} | {inr(opt['driver_cost'])} "
+                f"| **{inr(base['driver_cost'] - opt['driver_cost'])}** |\n"
+                f"| 💰 **Total** | {inr(base['total_cost'])} | {inr(opt['total_cost'])} "
+                f"| **{inr(saved)}** |",
                 98,
             )
 
-        # Carbon savings (exact)
-        if ("carbon" in q or "co2" in q or "emission" in q) and ("saving" in q or "save" in q or "reduc" in q or "how much" in q):
+        # Carbon savings
+        if ("carbon" in q or "co2" in q or "emission" in q) and \
+           any(kw in q for kw in ["saving", "save", "reduc", "how much"]):
             co2s = base["carbon_kg"] - opt["carbon_kg"]
             return (
-                f"**Carbon Savings: {co2s:,.1f} kg CO₂ ({co2s/base['carbon_kg']*100:.1f}% reduction)**\n\n"
+                f"**Carbon Savings: {co2s:,.1f} kg CO₂ "
+                f"({co2s / base['carbon_kg'] * 100:.1f}% reduction)**\n\n"
                 f"- Baseline: {base['carbon_kg']:,.1f} kg CO₂\n"
                 f"- Optimized: {opt['carbon_kg']:,.1f} kg CO₂\n"
-                f"- 🌳 Equivalent to **{int(co2s/21):,} trees** planted per year\n"
-                f"- 🚗 Or **{int(co2s/2400)} cars** removed from the road",
+                f"- 🌳 Equivalent to **{int(co2s / 21):,} trees** planted per year\n"
+                f"- 🚗 Or **{int(co2s / 2400)} cars** removed from the road",
                 98,
             )
 
-        # Truck route quick lookup
+        # Per-truck route lookup
         for v in [1, 2, 3, 4, 5]:
-            if (f"truck {v} route" in q or f"route of truck {v}" in q
-                    or (f"truck {v}" in q and "route" in q)):
+            if f"truck {v}" in q and "route" in q:
+                vrow = veh_sum[veh_sum["vehicle"] == v].iloc[0]
                 return (
                     f"**Truck {v} Route:**\n\n"
                     f"🚛 {route_map_text[v]}\n\n"
-                    f"📊 {int(veh_sum[veh_sum['vehicle']==v]['stops'].iloc[0])} stops · "
-                    f"{veh_sum[veh_sum['vehicle']==v]['distance_km'].iloc[0]:,.0f} km · "
-                    f"{inr(veh_sum[veh_sum['vehicle']==v]['total_cost'].iloc[0])}",
+                    f"📊 {int(vrow['stops'])} stops · "
+                    f"{vrow['distance_km']:,.0f} km · "
+                    f"{inr(vrow['total_cost'])}",
                     97,
                 )
 
         # Truck 3 route change explanation
-        if "truck 3" in q and any(kw in q for kw in ["change", "why", "explain", "reason", "chose"]):
+        if "truck 3" in q and any(kw in q for kw in ["change", "why", "explain",
+                                                       "reason", "chose"]):
             t3 = veh_sum[veh_sum["vehicle"] == 3].iloc[0]
-            breach_cities = routes[(routes["vehicle"] == 3) & (routes["sla_breach_hr"] > 0)]["city"].tolist()
+            breach_cities = routes[
+                (routes["vehicle"] == 3) & (routes["sla_breach_hr"] > 0)
+            ]["city"].tolist()
+            breach_note = (
+                f"\n⚠️ Breach cities: {', '.join(breach_cities)}"
+                if breach_cities else "\n✅ All SLA met"
+            )
             return (
                 f"**Why Truck 3's Route Was Chosen:**\n\n"
                 f"Route: {route_map_text[3]}\n\n"
-                f"Truck 3 was assigned the **Western + Southern peninsular + Northern** corridor because:\n"
-                f"- Aurangabad and Solapur are geographically clustered on the Pune–Hyderabad axis\n"
-                f"- Madurai anchors the deep southern leg, which no other truck covers\n"
-                f"- Jammu was assigned to Truck 3 as a high-priority stop requiring a dedicated northern extension\n"
-                f"- The CVRP solver minimized total weighted score (Cost 35% + Time 30% + Carbon 20% + SLA 15%)\n\n"
+                f"Truck 3 covers the **Western + Southern peninsular + Northern** corridor because:\n"
+                f"- Aurangabad and Solapur are clustered on the Pune–Hyderabad axis\n"
+                f"- Madurai anchors the deep southern leg (no other truck covers this)\n"
+                f"- Jammu is a high-priority stop needing a dedicated northern extension\n"
+                f"- CVRP solver minimized: Cost(35%) + Time(30%) + Carbon(20%) + SLA(15%)\n\n"
                 f"**Performance:** {t3['distance_km']:,.0f} km · {inr(t3['total_cost'])} · "
                 f"{t3['carbon_kg']:.0f} kg CO₂ · {int(t3['sla_breaches'])} SLA breach"
-                + (f"\n⚠️ Breach cities: {', '.join(breach_cities)}" if breach_cities else "\n✅ All SLA met"),
+                + breach_note,
                 96,
             )
 
-        # Tomorrow traffic risk prediction
-        if any(kw in q for kw in ["tomorrow", "predict traffic", "traffic risk", "forecast", "next day"]):
-            high_risk = ships[ships["traffic_mult"] > 2.0]["city"].tolist()
-            medium_risk = ships[(ships["traffic_mult"] > 1.4) & (ships["traffic_mult"] <= 2.0)]["city"].tolist()
+        # Traffic risk prediction
+        if any(kw in q for kw in ["tomorrow", "predict traffic", "traffic risk",
+                                   "forecast", "next day"]):
+            high_risk   = ships[ships["traffic_mult"] > 2.0]["city"].tolist()
+            medium_risk = ships[
+                (ships["traffic_mult"] > 1.4) & (ships["traffic_mult"] <= 2.0)
+            ]["city"].tolist()
             return (
                 f"**Predicted Traffic Risk for Tomorrow:**\n\n"
-                f"🔴 **HIGH RISK** (traffic_mult > 2.0): {', '.join(high_risk) if high_risk else 'None'}\n"
-                f"🟡 **MEDIUM RISK** (1.4–2.0×): {', '.join(medium_risk[:5]) if medium_risk else 'None'}\n"
+                f"🔴 **HIGH RISK** (>2.0×): "
+                f"{', '.join(high_risk) if high_risk else 'None'}\n"
+                f"🟡 **MEDIUM RISK** (1.4–2.0×): "
+                f"{', '.join(medium_risk[:5]) if medium_risk else 'None'}\n"
                 f"🟢 **STABLE**: All other corridors\n\n"
-                f"LoRRI will auto re-optimize if any HIGH RISK city exceeds 30% delay threshold.\n"
-                f"Recommendation: Pre-position Truck {veh_sum['vehicle'].iloc[0]} early departure for high-risk zones.",
+                f"LoRRI will auto re-optimize if any HIGH RISK city exceeds 30% delay.\n"
+                f"Recommendation: Pre-position Truck {int(veh_sum['vehicle'].iloc[0])} "
+                f"for early departure in high-risk zones.",
                 90,
             )
 
         # SLA breached cities
-        if any(kw in q for kw in ["which cities", "which city", "what cities", "where late", "cities late", "missed sla"]):
-            bd = routes[routes["sla_breach_hr"] > 0][["city", "vehicle", "sla_breach_hr", "sla_penalty"]]
+        if any(kw in q for kw in ["which cities", "which city", "what cities",
+                                   "where late", "cities late", "missed sla"]):
+            bd = routes[routes["sla_breach_hr"] > 0][
+                ["city", "vehicle", "sla_breach_hr", "sla_penalty"]
+            ]
             if bd.empty:
                 return ("✅ **No SLA breaches** — all deliveries were on time!", 99)
             lines = [f"**SLA Breach Cities ({len(bd)} stops late):**\n"]
@@ -969,22 +857,24 @@ Click a chip above or type your question below.
         return None, None
 
     # ════════════════════════════════════════════════════════════════════════
-    # ⑤ LANGCHAIN-STYLE PIPELINE  — Router → RAG → Pandas → LLM
+    # ⑤ PROMPT BUILDER — PromptTemplate equivalent
     # ════════════════════════════════════════════════════════════════════════
-    def build_system_prompt(query: str, rag_context: str, pandas_context: str) -> str:
-        """Builds a rich grounded system prompt — equivalent to LangChain's PromptTemplate."""
+    def build_system_prompt(rag_context: str, pandas_context: str) -> str:
+        """Builds a grounded system prompt from live fleet data + retrieved context."""
         bd_cities = ", ".join(routes[routes["sla_breach_hr"] > 0]["city"].tolist())
         fleet_summary = (
             f"Fleet: {opt['n_ships']} shipments | {opt['n_vehicles']} trucks | Depot: Mumbai\n"
             f"Optimized cost: {inr(opt['total_cost'])} | Baseline: {inr(base['total_cost'])} "
-            f"| Saved: {inr(base['total_cost']-opt['total_cost'])}\n"
+            f"| Saved: {inr(base['total_cost'] - opt['total_cost'])}\n"
             f"SLA: {opt['sla_pct']:.0f}% | Breaches: {opt['breaches']} ({bd_cities})\n"
-            f"Carbon: {opt['carbon_kg']:,.1f} kg (saved {base['carbon_kg']-opt['carbon_kg']:,.1f} kg)"
+            f"Carbon: {opt['carbon_kg']:,.1f} kg (saved "
+            f"{base['carbon_kg'] - opt['carbon_kg']:,.1f} kg)"
         )
         per_truck = "\n".join([
-            f"  Truck {int(r['vehicle'])}: {route_map_text.get(int(r['vehicle']),'?')} | "
+            f"  Truck {int(r['vehicle'])}: {route_map_text.get(int(r['vehicle']), '?')} | "
             f"{int(r['stops'])} stops | {r['distance_km']:,.0f} km | {inr(r['total_cost'])} | "
-            f"{r['carbon_kg']:.0f} kg CO₂ | {int(r['sla_breaches'])} breach | {r['utilization_pct']:.0f}% loaded"
+            f"{r['carbon_kg']:.0f} kg CO₂ | {int(r['sla_breaches'])} breach | "
+            f"{r['utilization_pct']:.0f}% loaded"
             for _, r in veh_sum.iterrows()
         ])
         context_block = ""
@@ -992,56 +882,59 @@ Click a chip above or type your question below.
             context_block += f"\n\n[RAG KNOWLEDGE RETRIEVED]\n{rag_context}"
         if pandas_context:
             context_block += f"\n\n[PANDAS DATA RETRIEVED]\n{pandas_context}"
-        return f"""You are the LoRRI Intelligence Assistant for LogisticsNow (logisticsnow.in).
-Contact: connect@logisticsnow.in | +91-9867773508
-Pricing: Fuel ₹12/km | Driver ₹180/hr | SLA penalty ₹500/hr | Toll variable
-Optimization: Cost(35%) + Time(30%) + Carbon(20%) + SLA(15%) — CVRP with OR-Tools
 
-LIVE FLEET DATA:
-{fleet_summary}
+        return (
+            f"You are the LoRRI Intelligence Assistant for LogisticsNow (logisticsnow.in).\n"
+            f"Contact: connect@logisticsnow.in | +91-9867773508\n"
+            f"Pricing: Fuel ₹12/km | Driver ₹180/hr | SLA penalty ₹500/hr | Toll variable\n"
+            f"Optimization: Cost(35%) + Time(30%) + Carbon(20%) + SLA(15%) — CVRP with OR-Tools\n\n"
+            f"LIVE FLEET DATA:\n{fleet_summary}\n\n"
+            f"PER-TRUCK:\n{per_truck}"
+            f"{context_block}\n\n"
+            f"RULES:\n"
+            f"- All monetary values MUST use ₹ INR format\n"
+            f"- Be concise; use bullet points and tables where helpful\n"
+            f"- Use ONLY the data provided above — do not invent numbers\n"
+            f"- If retrieved context answers the query, prioritize it\n"
+        )
 
-PER-TRUCK:
-{per_truck}
-{context_block}
-
-RULES:
-- All monetary values MUST use ₹ INR format
-- Be concise, use bullet points and tables where helpful
-- Use ONLY the data provided above — do not invent numbers
-- If the retrieved context answers the query, prioritize it
-"""
-
-    def call_claude_rag(query: str, messages_history: list) -> tuple[str, int, str, str]:
+    # ════════════════════════════════════════════════════════════════════════
+    # ⑥ FULL RAG PIPELINE — Router → RAG → Pandas → LLM
+    # ════════════════════════════════════════════════════════════════════════
+    def call_rag_pipeline(
+        query: str, messages_history: list
+    ) -> tuple[str, int, str, str]:
         """
-        Full RAG pipeline:
-        Step 1: Rule-based router (instant answer if pattern matches)
-        Step 2: RAG keyword retrieval (knowledge chunks)
-        Step 3: Pandas structured retrieval (DataFrame queries)
-        Step 4: LLM call with enriched grounded context
-        Returns (reply, confidence, retrieval_source, chunks_used)
+        4-step vectorless RAG pipeline:
+          Step 1 — Rule router  (instant, no API call)
+          Step 2 — RAG keyword retrieval  (knowledge chunks)
+          Step 3 — Pandas structured retrieval  (DataFrames)
+          Step 4 — LLM call with grounded context
+        Returns (reply, confidence, retrieval_source_label, chunks_description)
         """
         # Step 1 — Rule-based router
         rule_reply, rule_conf = rule_based_answer(query)
         if rule_reply:
             return rule_reply, rule_conf, "⚡ Rule-based router", "Instant pattern match"
 
-        # Step 2 — RAG keyword retrieval
-        rag_ctx     = rag_retrieve(query, top_k=3)
+        # Step 2 — RAG retrieval (keyword BM25-lite)
+        rag_ctx    = rag_retrieve(query, top_k=3)
         # Step 3 — Pandas structured retrieval
-        pandas_ctx  = pandas_retrieve(query)
+        pandas_ctx = pandas_retrieve(query)
 
-        # Determine retrieval source label
+        # Source label for UI badge
         sources = []
         if rag_ctx:    sources.append("📚 RAG chunks")
         if pandas_ctx: sources.append("🐼 Pandas DataFrames")
-        src_label = " + ".join(sources) if sources else "🤖 LLM general knowledge"
+        src_label  = " + ".join(sources) if sources else "🤖 LLM general knowledge"
+        n_chunks   = sum(1 for c in KNOWLEDGE_CHUNKS if c["text"] in rag_ctx) if rag_ctx else 0
+        chunks_info = (
+            f"{n_chunks} knowledge chunk(s) + "
+            f"{'DataFrame rows' if pandas_ctx else 'no structured data'}"
+        )
 
-        # Count chunks retrieved
-        n_chunks = len([c for c in KNOWLEDGE_CHUNKS if c["text"] in rag_ctx]) if rag_ctx else 0
-        chunks_info = f"{n_chunks} knowledge chunk(s) + {'DataFrame rows' if pandas_ctx else 'no structured data'}"
-
-        # Step 4 — LLM call with enriched prompt
-        system = build_system_prompt(query, rag_ctx, pandas_ctx)
+        # Step 4 — LLM synthesis
+        system  = build_system_prompt(rag_ctx, pandas_ctx)
         payload = {
             "model": "claude-sonnet-4-6",
             "max_tokens": 1024,
@@ -1057,32 +950,35 @@ RULES:
             )
             if resp.status_code == 200:
                 reply = resp.json()["content"][0]["text"]
-                # Confidence: higher when retrieval found strong context
-                conf = 95 if (rag_ctx and pandas_ctx) else (92 if (rag_ctx or pandas_ctx) else 84)
+                conf  = 95 if (rag_ctx and pandas_ctx) else (92 if (rag_ctx or pandas_ctx) else 84)
                 return reply, conf, src_label, chunks_info
-            return f"⚠️ API error {resp.status_code}", 0, "error", ""
+            return f"⚠️ API error {resp.status_code}: {resp.text[:120]}", 0, "error", ""
         except Exception as e:
             return f"⚠️ Connection error: {e}", 0, "error", ""
 
     # ════════════════════════════════════════════════════════════════════════
-    # UI — HEADER
+    # UI — HEADER BANNER
     # ════════════════════════════════════════════════════════════════════════
     st.markdown(f"""
     <div style="background:linear-gradient(135deg,{LN_NAVY} 0%,#1a4d2e 100%);
                 border-radius:14px;padding:22px 26px;margin-bottom:18px;
                 display:flex;align-items:center;gap:16px;">
         <div style="width:52px;height:52px;border-radius:12px;background:{LN_GREEN};
-                    display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;">🤖</div>
+                    display:flex;align-items:center;justify-content:center;
+                    font-size:1.6rem;flex-shrink:0;">🤖</div>
         <div>
-            <div style="font-size:1.1rem;font-weight:700;color:white;">LoRRI Intelligence Assistant</div>
+            <div style="font-size:1.1rem;font-weight:700;color:white;">
+                LoRRI Intelligence Assistant
+            </div>
             <div style="font-size:0.78rem;color:#94a3b8;margin-top:3px;">
-                <b style="color:{LN_GREEN}">Vectorless RAG</b> · LangChain-style Pipeline ·
-                Pandas Retrieval · Rule-Based Router · Claude LLM
+                <b style="color:{LN_GREEN}">Vectorless RAG</b> ·
+                LangChain-style Pipeline · Pandas Retrieval · Rule-Based Router · Claude LLM
             </div>
         </div>
         <div style="margin-left:auto;text-align:right;">
             <div style="background:rgba(34,197,94,0.15);border:1px solid {LN_GREEN};
-                        border-radius:20px;padding:4px 14px;font-size:0.7rem;color:{LN_GREEN};font-weight:600;margin-bottom:6px;">
+                        border-radius:20px;padding:4px 14px;font-size:0.7rem;
+                        color:{LN_GREEN};font-weight:600;margin-bottom:6px;">
                 ● LIVE AI
             </div>
             <div style="font-size:0.65rem;color:#64748b;">Ask in English or Hindi</div>
@@ -1090,18 +986,19 @@ RULES:
     </div>
     """, unsafe_allow_html=True)
 
-    # Pipeline architecture badge row
+    # Pipeline step badges
     st.markdown(f"""
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;">
-        <span style="font-size:0.65rem;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Pipeline:</span>
+        <span style="font-size:0.65rem;color:#64748b;font-weight:600;
+                     text-transform:uppercase;letter-spacing:0.08em;">Pipeline:</span>
         {"".join([
-            f'<span style="background:{bg};color:{fg};border:1px solid {br};border-radius:6px;'
-            f'padding:3px 10px;font-size:0.7rem;font-weight:600;">{label}</span>'
+            f'<span style="background:{bg};color:{fg};border:1px solid {br};'
+            f'border-radius:6px;padding:3px 10px;font-size:0.7rem;font-weight:600;">{label}</span>'
             for label, bg, fg, br in [
-                ("① Rule Router",    "#fef3c7", "#92400e", "#f59e0b"),
-                ("→ ② RAG Retriever","#f0fdf4", LN_DGREEN, LN_GREEN),
-                ("→ ③ Pandas Query", "#eff6ff", "#1e40af", "#3b82f6"),
-                ("→ ④ LLM Synthesis","#f5f3ff", "#5b21b6", "#8b5cf6"),
+                ("① Rule Router",     "#fef3c7", "#92400e", "#f59e0b"),
+                ("→ ② RAG Retriever", "#f0fdf4", LN_DGREEN, LN_GREEN),
+                ("→ ③ Pandas Query",  "#eff6ff", "#1e40af", "#3b82f6"),
+                ("→ ④ LLM Synthesis", "#f5f3ff", "#5b21b6", "#8b5cf6"),
             ]
         ])}
     </div>
@@ -1110,9 +1007,12 @@ RULES:
     # Capability cards
     c1, c2, c3 = st.columns(3)
     for col, color, icon, title, desc in [
-        (c1, LN_GREEN,  "🏢", "Company & Platform",  "LogisticsNow info, LoRRI services, pricing model, contact details"),
-        (c2, "#1e7abf", "🚛", "Fleet & Routes",       "Per-truck data, cost breakdowns, SLA status, carbon — from DataFrames"),
-        (c3, "#e67e22", "🧠", "AI & Methodology",     "CVRP, weighted objectives, re-optimization triggers, explainability"),
+        (c1, LN_GREEN,  "🏢", "Company & Platform",
+         "LogisticsNow info, LoRRI services, pricing model, contact details"),
+        (c2, "#1e7abf", "🚛", "Fleet & Routes",
+         "Per-truck data, cost breakdowns, SLA status, carbon — from DataFrames"),
+        (c3, "#e67e22", "🧠", "AI & Methodology",
+         "CVRP, weighted objectives, re-optimization triggers, explainability"),
     ]:
         col.markdown(f"""
         <div style="background:white;border:1px solid {LN_BORDER};border-radius:10px;
@@ -1122,10 +1022,13 @@ RULES:
             <div style="font-size:0.81rem;color:#475569;line-height:1.6;">{desc}</div>
         </div>""", unsafe_allow_html=True)
 
-    # ── CHIP BUTTON STYLES ────────────────────────────────────────────────────
+    # ── SESSION STATE ─────────────────────────────────────────────────────
+    if "msgs" not in st.session_state:
+        st.session_state.msgs = []
+
+    # ── CHIP BUTTON STYLES ────────────────────────────────────────────────
     st.markdown(f"""
     <style>
-    /* Style every chip button to look like a pill/badge */
     div[data-testid="stHorizontalBlock"] button[kind="secondary"] {{
         background: #f0fdf4 !important;
         border: 1px solid {LN_GREEN} !important;
@@ -1134,11 +1037,9 @@ RULES:
         font-size: 0.72rem !important;
         font-weight: 600 !important;
         padding: 4px 10px !important;
-        line-height: 1.4 !important;
         white-space: normal !important;
         height: auto !important;
         min-height: 2rem !important;
-        transition: background 0.15s, box-shadow 0.15s !important;
     }}
     div[data-testid="stHorizontalBlock"] button[kind="secondary"]:hover {{
         background: {LN_GREEN} !important;
@@ -1151,21 +1052,20 @@ RULES:
     """, unsafe_allow_html=True)
 
     CHIP_QUESTIONS = [
-        ("What is LoRRI?",                    "🏢"),
-        ("How much did we save in ₹?",        "💰"),
-        ("Which cities were late?",            "⚠️"),
-        ("Which truck costs most?",            "🚛"),
-        ("Truck 3 route?",                     "🗺️"),
-        ("Carbon savings?",                    "🌿"),
-        ("Explain why Truck 3 route changed",  "🧠"),
-        ("Predict tomorrow's traffic risk",    "🚦"),
-        ("Suggest cost saving actions",        "💡"),
-        ("Contact LogisticsNow",               "📞"),
+        ("What is LoRRI?",                   "🏢"),
+        ("How much did we save in ₹?",       "💰"),
+        ("Which cities were late?",           "⚠️"),
+        ("Which truck costs most?",           "🚛"),
+        ("Truck 3 route?",                    "🗺️"),
+        ("Carbon savings?",                   "🌿"),
+        ("Explain why Truck 3 route changed", "🧠"),
+        ("Predict tomorrow's traffic risk",   "🚦"),
+        ("Suggest cost saving actions",       "💡"),
+        ("Contact LogisticsNow",              "📞"),
     ]
 
-    # ── PHASE 1: render chip buttons; if clicked → store in state + rerun ─────
-    # This runs on every render. chip_prompt is consumed only in Phase 2 below.
-    chip_cols = st.columns(5)
+    # Phase 1 — render chip buttons; store click in session state → rerun
+    chip_cols    = st.columns(5)
     chip_clicked = False
     for idx, (question, emoji) in enumerate(CHIP_QUESTIONS):
         with chip_cols[idx % 5]:
@@ -1174,18 +1074,15 @@ RULES:
                 key=f"chip_{idx}",
                 use_container_width=True,
             ):
-                # Store the question and immediately rerun so Phase 2 can pick it up
-                # on the very next render, after the button state is stable.
                 st.session_state.chip_prompt = question
                 chip_clicked = True
 
-    # If a chip was just clicked this render, rerun so the prompt is processed cleanly
     if chip_clicked:
         st.rerun()
 
     st.markdown("<div style='margin-bottom:4px;'></div>", unsafe_allow_html=True)
 
-    # ── PHASE 2: render chat history ─────────────────────────────────────────
+    # Phase 2 — render welcome message + chat history
     if not st.session_state.msgs:
         with st.chat_message("assistant", avatar="🚚"):
             st.markdown(
@@ -1203,8 +1100,10 @@ RULES:
             st.markdown(m["content"])
             if m["role"] == "assistant" and m.get("meta"):
                 meta = m["meta"]
-                conf_color = (LN_GREEN if meta["conf"] >= 90
-                              else ("#f59e0b" if meta["conf"] >= 80 else "#dc2626"))
+                conf_color = (
+                    LN_GREEN if meta["conf"] >= 90
+                    else ("#f59e0b" if meta["conf"] >= 80 else "#dc2626")
+                )
                 st.markdown(f"""
                 <div style="margin-top:8px;padding:5px 12px;background:#f8fafc;
                             border:1px solid {LN_BORDER};border-radius:20px;
@@ -1217,15 +1116,11 @@ RULES:
                 </div>
                 """, unsafe_allow_html=True)
 
-    # ── PHASE 3: consume chip_prompt OR typed input, call RAG, append reply ───
-    # Consume stored chip prompt (set in Phase 1 on the previous render cycle)
+    # Phase 3 — consume chip_prompt OR typed input → call pipeline → append
     final_prompt = st.session_state.pop("chip_prompt", None)
-
-    # Also render the chat_input widget; if user typed, that overrides nothing —
-    # both chip and typed prompts are handled the same way.
     typed_prompt = st.chat_input(
-    "Ask about LoRRI, fleet data, ₹ costs, routes, SLA...",
-    key="lorri_chat_input"
+        "Ask about LoRRI, fleet data, ₹ costs, routes, SLA…",
+        key="lorri_chat_input",
     )
     if typed_prompt:
         final_prompt = typed_prompt
@@ -1242,10 +1137,12 @@ RULES:
 
         with st.chat_message("assistant", avatar="🚚"):
             with st.spinner("🔍 Running RAG pipeline…"):
-                reply, conf, source, chunks = call_claude_rag(final_prompt, api_msgs)
+                reply, conf, source, chunks = call_rag_pipeline(final_prompt, api_msgs)
             st.markdown(reply)
-            conf_color = (LN_GREEN if conf >= 90
-                          else ("#f59e0b" if conf >= 80 else "#dc2626"))
+            conf_color = (
+                LN_GREEN if conf >= 90
+                else ("#f59e0b" if conf >= 80 else "#dc2626")
+            )
             st.markdown(f"""
             <div style="margin-top:8px;padding:5px 12px;background:#f8fafc;
                         border:1px solid {LN_BORDER};border-radius:20px;
@@ -1270,6 +1167,25 @@ RULES:
             st.session_state.msgs = []
             st.rerun()
 
+    # Footer
+    st.markdown(f"""
+    <div style="margin-top:40px;">
+        <div style="background:{LN_NAVY};color:white;padding:18px 28px;
+                    border-radius:10px;display:flex;justify-content:space-between;
+                    align-items:center;">
+            <div>
+                <b>Logistics<span style="color:{LN_GREEN};">Now</span></b>
+                · LoRRI AI Route Optimization Engine
+                <div style="font-size:0.8rem;color:#94a3b8;">
+                    Problem Statement 4 · Synapflow Hackathon
+                </div>
+            </div>
+            <div style="font-size:0.85rem;color:#cbd5e1;">
+                📧 connect@logisticsnow.in
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 # ══════════════════════════════════════════════════════════════════════════════
 # PAGE: DASHBOARD SUMMARY
 # ══════════════════════════════════════════════════════════════════════════════
