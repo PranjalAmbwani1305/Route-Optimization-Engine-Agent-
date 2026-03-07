@@ -447,10 +447,11 @@ with st.sidebar:
     <div class="sb-sub">LoRRI AI Route Engine</div>
     """, unsafe_allow_html=True)
 
-    st.markdown(f'<div class="sb-sec">🤖 AI Assistant</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="sb-sec">📊 Analytics</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="sb-sec">🏢 Platform</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="sb-sec">📊 Analytics Suite</div>', unsafe_allow_html=True)
 
     pg = st.radio("nav", [
+        "🏢 About LoRRI",
         "🤖 LoRRI AI Assistant",
         "📊 Dashboard Summary",
         "🗺️ Route Map",
@@ -540,9 +541,218 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
-# PAGE 1 (FIRST): AI ASSISTANT — RAG grounded on LogisticsNow + fleet data
+# PAGE 0: ABOUT LORRI — from Synapflow Problem Statement 4 PDF
 # ══════════════════════════════════════════════════════════════════════════════
-if pg == "🤖 LoRRI AI Assistant":
+if pg == "🏢 About LoRRI":
+
+    # ── Executive Overview ────────────────────────────────────────────────────
+    st.markdown(f"""
+    <div style="background:white;border:1px solid {LN_BORDER};border-radius:14px;
+                padding:32px 36px;margin-bottom:20px;border-top:4px solid {LN_GREEN};">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;">
+            <div style="width:46px;height:46px;background:{LN_GREEN};border-radius:10px;
+                        display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">🚚</div>
+            <div>
+                <div style="font-size:1.35rem;font-weight:700;color:{LN_NAVY};">Executive Overview</div>
+                <div style="font-size:0.78rem;color:#64748b;">LoRRI · AI Route Optimization Engine · Problem Statement 4</div>
+            </div>
+        </div>
+        <p style="font-size:0.9rem;color:#334155;line-height:1.85;margin:0;">
+            While <b style="color:{LN_NAVY}">LoRRI</b> currently excels as a premier logistics intelligence platform —
+            offering robust carrier profiling, lane analytics, and procurement insights — there remains a
+            <b>critical gap</b> between high-level analytics and real-time execution. Current routing decisions
+            within many logistics networks remain <b>static and cost-centric</b>, often failing to account for
+            volatile operational factors such as fluctuating traffic, toll structures, and carbon mandates.
+        </p>
+        <p style="font-size:0.9rem;color:#334155;line-height:1.85;margin:14px 0 0 0;">
+            We propose the integration of a <b style="color:{LN_GREEN}">Dynamic Multi-Objective Route Optimization Engine</b>
+            designed to transform LoRRI from a retrospective diagnostic tool into a
+            <b>proactive, real-time decision intelligence ecosystem</b>.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Proposed Solution ─────────────────────────────────────────────────────
+    c1, c2 = st.columns([3, 2])
+    with c1:
+        st.markdown(f"""
+        <div style="background:white;border:1px solid {LN_BORDER};border-radius:12px;padding:26px 28px;height:100%;border-top:4px solid #1e7abf;">
+            <div style="font-size:1.05rem;font-weight:700;color:{LN_NAVY};margin-bottom:14px;">💡 Proposed Solution</div>
+            <p style="font-size:0.88rem;color:#334155;line-height:1.8;margin:0 0 12px 0;">
+                Integrating our <b>Route Optimization Engine</b> directly into the <b>LoRRI platform</b> will convert
+                logistics intelligence into <b>real-time operational decision-making</b>. The module optimizes
+                multi-stop delivery routes using a <b>Capacitated Vehicle Routing (CVRP) framework</b> and
+                dynamically re-optimizes them when <b>traffic disruptions</b> or <b>shipment priorities</b> change.
+            </p>
+            <p style="font-size:0.88rem;color:#334155;line-height:1.8;margin:0;">
+                Rather than minimising distance alone, it balances <b>delivery time</b>, <b>transportation cost
+                (including toll charges)</b>, <b>SLA adherence</b>, and <b>carbon impact</b> through a
+                weighted objective scoring model aligned with business priorities.
+            </p>
+            <div style="margin-top:16px;background:{LN_LGRAY};border-radius:8px;padding:14px 16px;font-size:0.82rem;color:#475569;line-height:1.8;">
+                📊 <b>Baseline vs Optimised</b> route comparison with an <b>explainable breakdown</b>
+                of routing decisions — ensuring <b>transparency and operational trust</b>.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with c2:
+        st.markdown(f"""
+        <div style="background:{LN_NAVY};border-radius:12px;padding:26px 24px;height:100%;color:white;">
+            <div style="font-size:1.0rem;font-weight:700;margin-bottom:16px;color:white;">⚙️ Weighted Objectives</div>
+            <div style="font-size:0.82rem;line-height:1;margin-bottom:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;">How routing decisions are scored</div>
+        """, unsafe_allow_html=True)
+
+        objectives = [
+            ("💰 Total Cost (₹)", 35, "#3a7d2c", "Fuel · Toll · Driver · SLA Penalties"),
+            ("⏱️ Travel Time",     30, "#1e7abf", "Hours on road with traffic multiplier"),
+            ("🌿 Carbon CO₂",      20, "#27ae60", "kg CO₂ per km by road type"),
+            ("📅 SLA Adherence",   15, "#e67e22", "Delivery promise window 24/48/72hr"),
+        ]
+        for label, pct, color, desc in objectives:
+            st.markdown(f"""
+            <div style="margin-top:14px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                    <span style="font-size:0.83rem;font-weight:600;color:white;">{label}</span>
+                    <span style="font-family:monospace;font-size:0.78rem;color:{color};font-weight:700;">{pct}%</span>
+                </div>
+                <div style="background:rgba(255,255,255,0.1);border-radius:4px;height:7px;overflow:hidden;">
+                    <div style="width:{pct*2.86:.0f}%;height:100%;background:{color};border-radius:4px;"></div>
+                </div>
+                <div style="font-size:0.7rem;color:#94a3b8;margin-top:3px;">{desc}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ── AI & Optimization Approach ────────────────────────────────────────────
+    st.markdown(f"""
+    <div style="background:white;border:1px solid {LN_BORDER};border-radius:12px;padding:26px 28px;margin-bottom:20px;border-top:4px solid {LN_GREEN};">
+        <div style="font-size:1.05rem;font-weight:700;color:{LN_NAVY};margin-bottom:14px;">🧠 AI & Optimization Approach</div>
+        <p style="font-size:0.88rem;color:#334155;line-height:1.8;margin:0 0 14px 0;">
+            We model routing as a <b>Capacitated Vehicle Routing Problem (CVRP)</b> with a
+            <b>weighted multi-objective function</b> minimising travel time, total transportation cost
+            (fuel, toll, driver, SLA penalties), and carbon emissions under capacity constraints.
+            Using a <b>heuristic OR-Tools solver with local search refinements</b>, we generate scalable
+            multi-stop routes and trigger <b>threshold-based re-optimisation</b> only during traffic or
+            priority disruptions. An integrated <b>explainability layer</b> breaks down objective contributions
+            to clearly compare baseline versus optimised performance.
+        </p>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px;">
+    """, unsafe_allow_html=True)
+
+    tech_cards = [
+        ("🔧", "CVRP Framework",        "Capacitated Vehicle Routing with multi-stop optimization under 800 kg per truck"),
+        ("⚡", "OR-Tools Solver",         "Heuristic solver with local search refinements for scalable India-wide routing"),
+        ("🔄", "Threshold Re-optimize",  "Auto re-routes when traffic causes >30% delay or a shipment is escalated"),
+        ("🔍", "Explainability Layer",   "Permutation-based feature importance (SHAP-style) for every routing decision"),
+    ]
+    for icon, title, desc in tech_cards:
+        st.markdown(f"""
+        <div style="background:{LN_LGRAY};border-radius:10px;padding:16px;border:1px solid {LN_BORDER};">
+            <div style="font-size:1.3rem;margin-bottom:8px;">{icon}</div>
+            <div style="font-size:0.82rem;font-weight:700;color:{LN_NAVY};margin-bottom:6px;">{title}</div>
+            <div style="font-size:0.76rem;color:#64748b;line-height:1.6;">{desc}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("</div></div>", unsafe_allow_html=True)
+
+    # ── Expected Impact ───────────────────────────────────────────────────────
+    st.markdown(f'<div class="sh">📈 Expected Impact — Industry Benchmarks</div>', unsafe_allow_html=True)
+
+    col1, col2, col3, col4 = st.columns(4)
+    impact = [
+        (col1, "8–20%",  "Travel Distance Reduction",  LN_GREEN,  "Based on VRP-based routing systems"),
+        (col2, "5–15%",  "Cost Savings (₹)",            "#1e7abf", "Fuel + Toll + Driver optimisation"),
+        (col3, "↑ SLA",  "Adherence Improvement",       "#e67e22", "Measurable delivery promise gains"),
+        (col4, "↑ Fleet","Utilisation Gains",           "#8e44ad", "Proportional CO₂ emission reductions"),
+    ]
+    for col, val, label, color, sub in impact:
+        col.markdown(f"""
+        <div style="background:white;border:1px solid {LN_BORDER};border-radius:12px;padding:20px;
+                    border-top:3px solid {color};text-align:center;">
+            <div style="font-size:1.8rem;font-weight:800;color:{color};line-height:1;">{val}</div>
+            <div style="font-size:0.78rem;font-weight:700;color:{LN_NAVY};margin:8px 0 4px;">{label}</div>
+            <div style="font-size:0.7rem;color:#94a3b8;line-height:1.5;">{sub}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ── Architecture Flow ─────────────────────────────────────────────────────
+    st.markdown(f'<div class="sh">🏗️ System Architecture & LoRRI Integration</div>', unsafe_allow_html=True)
+
+    layers = [
+        ("👤 User Layer",             "#1e7abf", ["LoRRI Dashboard (Frontend UI)", "Route Visualisation", "KPI Panels", "Baseline vs Optimised View"]),
+        ("⚙️ Application / Service",  LN_GREEN,  ["Route Optimisation API Service", "Re-Optimisation Trigger Service", "Explainability & KPI Service"]),
+        ("🔬 Optimisation Core",       "#e67e22", ["CVRP Multi-Objective Model", "Heuristic Solver (OR-Tools)", "Dynamic Re-Optimisation Engine"]),
+        ("📊 Intelligence & Output",   "#8e44ad", ["Optimised Route Plan Generation", "Explainability Breakdown", "Baseline vs Optimised KPI Deltas"]),
+    ]
+    cols = st.columns(4)
+    for col, (title, color, items) in zip(cols, layers):
+        items_html = "".join(
+            f'<div style="font-size:0.75rem;color:#334155;padding:5px 0;border-bottom:1px solid {LN_BORDER};line-height:1.4;">• {item}</div>'
+            for item in items
+        )
+        col.markdown(f"""
+        <div style="background:white;border:1px solid {LN_BORDER};border-radius:10px;overflow:hidden;">
+            <div style="background:{color};padding:10px 14px;color:white;font-size:0.82rem;font-weight:700;">{title}</div>
+            <div style="padding:10px 14px;">{items_html}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <div style="background:{LN_LGRAY};border:1px solid {LN_BORDER};border-radius:8px;
+                padding:12px 20px;margin-top:12px;text-align:center;
+                font-size:0.78rem;color:#475569;font-family:monospace;letter-spacing:0.04em;">
+        FLOW: &nbsp; Data &nbsp;→&nbsp; Model &nbsp;→&nbsp; Solve &nbsp;→&nbsp; Adapt &nbsp;→&nbsp; Explain &nbsp;→&nbsp; Compare &nbsp;→&nbsp; User Display
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ── Team Capability ───────────────────────────────────────────────────────
+    st.markdown(f'<div class="sh">👥 Team Capability & Execution Strength</div>', unsafe_allow_html=True)
+    st.markdown(f"""
+    <div style="background:linear-gradient(135deg,{LN_NAVY} 0%,#1a3a2a 100%);
+                border-radius:12px;padding:28px 32px;color:white;">
+        <p style="font-size:0.9rem;line-height:1.85;color:#cbd5e1;margin:0 0 20px 0;">
+            Our team combines expertise in <b style="color:white;">supply chain operations</b>,
+            <b style="color:white;">AI-driven decision systems</b>,
+            <b style="color:white;">optimization modeling</b>, and
+            <b style="color:white;">frontend dashboard development</b>, enabling us to design a solution
+            that is technically rigorous, operationally realistic, and seamlessly integrable within the LoRRI ecosystem.
+            This interdisciplinary strength ensures we can deliver a <b style="color:{LN_GREEN};">scalable,
+            explainable, and visually demonstrable prototype</b> within hackathon timelines.
+        </p>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+    """, unsafe_allow_html=True)
+
+    skills = [
+        ("🏭", "Supply Chain Ops",      "Deep domain knowledge of Indian logistics corridors and fleet operations"),
+        ("🤖", "AI Decision Systems",   "Multi-objective optimization, constraint programming, OR-Tools expertise"),
+        ("📐", "Optimization Modeling", "CVRP formulation, heuristic local search, threshold-based re-solving"),
+        ("🖥️", "Frontend & Dashboard",  "Streamlit, Plotly, real-time UI with explainability and KPI panels"),
+    ]
+    for icon, title, desc in skills:
+        st.markdown(f"""
+        <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);
+                    border-radius:10px;padding:16px;">
+            <div style="font-size:1.3rem;margin-bottom:8px;">{icon}</div>
+            <div style="font-size:0.83rem;font-weight:700;color:white;margin-bottom:6px;">{title}</div>
+            <div style="font-size:0.73rem;color:#94a3b8;line-height:1.55;">{desc}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("</div></div>", unsafe_allow_html=True)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PAGE 1: AI ASSISTANT — RAG grounded on LogisticsNow + fleet data
+# ══════════════════════════════════════════════════════════════════════════════
+elif pg == "🤖 LoRRI AI Assistant":
 
     # RAG header card
     st.markdown(f"""
