@@ -530,7 +530,7 @@ with st.sidebar:
     if st.button("🔄 Sync Depot Data", use_container_width=True):
         st.toast("✅ Synced with Mumbai Depot!", icon="🏭")
 
-shipments_count = len(ships)
+    shipments_count = len(ships)
     trucks_count = veh_sum["vehicle"].nunique()
     sla_ok = int((routes["sla_breach_hr"] == 0).sum() / len(routes) * 100)
     breaches = int((routes["sla_breach_hr"] > 0).sum())
