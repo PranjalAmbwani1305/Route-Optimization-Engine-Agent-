@@ -410,7 +410,7 @@ python route_solver.py
 streamlit run dashboard.py
 ```
 
-The dashboard opens automatically at **http://localhost:8501**
+The dashboard opens automatically at https://pk3qk2demgzlajzuakssyv.streamlit.app/
 
 To stop the server: `Ctrl + C`
 
@@ -455,18 +455,8 @@ Feedback loop: actual vs. predicted delivery times feeds model retraining. Drive
 **Phase 4 — Fleet Intelligence**
 Real-time GPS integration for live vehicle tracking. Automatic re-optimization triggered by geofence events. Driver app integration for turn-by-turn optimized navigation.
 
----
-
-## 👥 Team
-
-Built for the **LogisticsNow Hackathon** · Problem Statement #4 · AI Route Optimization Engine
-
-| Name | Role |
-|---|---|
-| Pranjal Ambwani | Backend / Optimization Engine / RAG |
-| Swadha Singh | Data Pipeline / Dashboard |
-
----
+**Phase 5 — Multilingual Driver Interaction:**
+Integrate Hindi support into the RAG AI agent using LangChain, enabling local drivers to interact with the system through Hindi text or voice for route updates, delivery instructions, and logistics queries.
 
 <div align="center">
 
