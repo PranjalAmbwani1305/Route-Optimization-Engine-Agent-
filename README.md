@@ -214,9 +214,9 @@ LoRRI Platform (lorri.in)
 | **Data** | Pandas | Data manipulation, CSV I/O |
 | **Dashboard UI** | Streamlit | Multi-page interactive web interface |
 | **Visualization** | Plotly | Route maps, bar/line charts, KPI gauges |
-| **RAG Engine** | LangChain + FAISS / ChromaDB | Vector search, document retrieval |
-| **LLM** | OpenAI GPT / Groq | Natural language responses in AI Assistant |
-| **Embeddings** | OpenAI / HuggingFace | Semantic search over logistics data |
+| **RAG Engine** | Vectorless RAG (Rule Router + BM25-lite) | Query routing and knowledge retrieval |
+| **Data Retrieval** | Pandas DataFrames | Structured logistics data queries |
+| **AI Assistant** | Local Response Synthesizer | Generates responses without external API |
 | **Deployment** | Streamlit Cloud | Zero-infra public URL deployment |
 | **Data Model** | India-realistic synthetic | 30 cities, 7 truck types, real NH tolls, INR |
 
@@ -387,17 +387,8 @@ You'll know it's active when you see `(venv)` at the start of your terminal prom
 pip install -r requirements.txt
 ```
 
-### Step 5 — Configure Environment Variables
 
-Create a `.env` file in the root directory:
-
-```env
-OPENAI_API_KEY=your_openai_api_key_here
-```
-
-The RAG assistant requires an OpenAI API key. All other dashboard pages work without it.
-
-### Step 6 — Run the Full Pipeline
+### Step 5 — Run the Full Pipeline
 
 ```bash
 # Generate India-realistic synthetic data
