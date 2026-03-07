@@ -27,11 +27,11 @@ st.set_page_config(
 # ─────────────────────────────────────────────────────────────────────────────
 # BRAND COLORS  (from LogisticsNow website)
 # ─────────────────────────────────────────────────────────────────────────────
-LN_GREEN  = "#3a7d2c"   # LogisticsNow primary green
-LN_DGREEN = "#2d6a2d"   # darker green (buttons)
-LN_NAVY   = "#1e2d3d"   # dark topbar
-LN_LGRAY  = "#f5f6f7"   # page bg
-LN_BORDER = "#e0e4e8"
+LN_GREEN  = "#22c55e"   # primary green
+LN_DGREEN = "#15803d"   # darker green accents
+LN_NAVY   = "#000000"   # black (replaces navy)
+LN_LGRAY  = "#ffffff"   # white background
+LN_BORDER = "#e5e7eb"   # light gray borders
 
 DEPOT       = {"latitude": 19.0760, "longitude": 72.8777}
 VEHICLE_CAP = 800
@@ -66,231 +66,293 @@ def inr(val):
 # ─────────────────────────────────────────────────────────────────────────────
 st.markdown(f"""
 <style>
+
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
 
+/* GLOBAL */
 html, body, [class*="css"] {{
     font-family: 'Poppins', sans-serif;
     background: {LN_LGRAY};
-}}
-.main .block-container {{
-    padding: 0 !important;
-    max-width: 100% !important;
+    color: {LN_NAVY};
 }}
 
-/* ── TOP BAR (like LogisticsNow dark bar) ── */
+.main .block-container {{
+    padding: 20px 40px;
+    max-width: 100%;
+}}
+
+/* TOP BAR */
 .topbar {{
     background: {LN_NAVY};
     padding: 8px 40px;
-    display: flex; align-items: center; justify-content: space-between;
-    font-size: 0.75rem; color: #aab8c5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: #cbd5e1;
 }}
-.topbar a {{ color: #aab8c5; text-decoration: none; }}
-.topbar a:hover {{ color: white; }}
 
-/* ── MAIN NAV BAR ── */
+.topbar a {{
+    color: #cbd5e1;
+    text-decoration: none;
+}}
+
+.topbar a:hover {{
+    color: white;
+}}
+
+/* NAVBAR */
 .navbar {{
     background: white;
     padding: 14px 40px;
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     border-bottom: 2px solid {LN_BORDER};
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }}
-.logo-wrap {{ display: flex; align-items: center; gap: 10px; }}
+
+.logo-wrap {{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}}
+
 .logo-n {{
-    width: 44px; height: 44px;
+    width: 44px;
+    height: 44px;
     background: {LN_NAVY};
-    color: white; border-radius: 6px;
-    font-size: 1.4rem; font-weight: 800;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Poppins', sans-serif;
-}}
-.logo-text {{
-    font-size: 1.4rem; font-weight: 700;
-    color: {LN_NAVY}; letter-spacing: -0.5px;
-}}
-.logo-text span {{ color: {LN_GREEN}; }}
-.nav-links {{ display: flex; gap: 28px; }}
-.nav-link {{
-    font-size: 0.85rem; font-weight: 500;
-    color: #334155; text-decoration: none;
-    letter-spacing: 0.02em;
-}}
-.nav-link:hover {{ color: {LN_GREEN}; }}
-.nav-cta {{
-    background: {LN_DGREEN};
-    color: white; padding: 8px 20px;
-    border-radius: 4px; font-size: 0.8rem;
-    font-weight: 600; letter-spacing: 0.05em;
-    text-transform: uppercase;
-    display: flex; align-items: center; gap: 8px;
-}}
-
-/* ── HERO BANNER (dark like website) ── */
-.hero-banner {{
-    background: linear-gradient(135deg, {LN_NAVY} 0%, #2d4a6b 60%, #1a3a1a 100%);
-    padding: 36px 40px 28px;
     color: white;
-    position: relative; overflow: hidden;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
 }}
-.hero-banner::before {{
-    content: '';
-    position: absolute; inset: 0;
-    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+
+.logo-text {{
+    font-size: 1.4rem;
+    font-weight: 700;
 }}
+
+.logo-text span {{
+    color: {LN_GREEN};
+}}
+
+.nav-links {{
+    display: flex;
+    gap: 25px;
+}}
+
+.nav-link {{
+    text-decoration: none;
+    font-size: 0.9rem;
+    color: {LN_NAVY};
+}}
+
+.nav-link:hover {{
+    color: {LN_GREEN};
+}}
+
+.nav-cta {{
+    background: {LN_GREEN};
+    color: white;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+}}
+
+/* HERO */
+.hero-banner {{
+    background: linear-gradient(135deg, #000000 0%, #14532d 100%);
+    padding: 40px;
+    color: white;
+}}
+
 .hero-title {{
-    font-size: 2rem; font-weight: 700;
-    margin: 0 0 6px 0; line-height: 1.2;
-    position: relative;
+    font-size: 2rem;
+    font-weight: 700;
 }}
-.hero-title span {{ color: {LN_GREEN}; }}
+
+.hero-title span {{
+    color: {LN_GREEN};
+}}
+
 .hero-sub {{
-    font-size: 0.88rem; color: #94a3b8;
-    position: relative; margin-bottom: 16px;
+    font-size: 0.9rem;
+    color: #cbd5e1;
 }}
+
 .hero-badge {{
-    display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(58,125,44,0.2); border: 1px solid {LN_GREEN};
-    color: #6bcf57; border-radius: 20px;
-    padding: 4px 14px; font-size: 0.72rem; font-weight: 600;
-    letter-spacing: 0.08em; text-transform: uppercase;
+    background: rgba(34,197,94,0.15);
+    border: 1px solid {LN_GREEN};
+    color: {LN_GREEN};
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
 }}
 
-/* ── CONTENT AREA ── */
+/* CONTENT */
 .content-area {{
-    padding: 24px 32px;
-    background: {LN_LGRAY};
+    padding: 25px 40px;
 }}
 
-/* ── BREADCRUMB ── */
+/* BREADCRUMB */
 .breadcrumb {{
-    font-size: 0.78rem; color: #64748b;
-    margin-bottom: 20px;
-    display: flex; align-items: center; gap: 6px;
+    font-size: 0.8rem;
+    color: #64748b;
 }}
-.breadcrumb a {{ color: {LN_GREEN}; text-decoration: none; }}
 
-/* ── KPI CARDS ── */
-.kpi-grid {{ display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }}
+.breadcrumb a {{
+    color: {LN_GREEN};
+    text-decoration: none;
+}}
+
+/* KPI CARDS */
+.kpi-grid {{
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 16px;
+}}
+
 .kpi-card {{
-    background: white; border: 1px solid {LN_BORDER};
-    border-radius: 10px; padding: 18px 20px;
-    position: relative; overflow: hidden;
+    background: white;
+    border: 1px solid {LN_BORDER};
+    border-radius: 10px;
+    padding: 18px;
     transition: box-shadow 0.2s;
 }}
-.kpi-card:hover {{ box-shadow: 0 4px 16px rgba(58,125,44,0.12); }}
+
+.kpi-card:hover {{
+    box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+}}
+
 .kpi-card::before {{
-    content:''; position:absolute; top:0; left:0; right:0; height:3px;
-    background: var(--ac, {LN_GREEN});
+    content: '';
+    display: block;
+    height: 3px;
+    background: {LN_GREEN};
+    margin-bottom: 10px;
 }}
+
 .kpi-lbl {{
-    font-size: 0.6rem; font-weight: 600;
-    color: #64748b; text-transform: uppercase;
-    letter-spacing: 0.1em; margin-bottom: 8px;
+    font-size: 0.7rem;
+    color: #64748b;
+    text-transform: uppercase;
 }}
+
 .kpi-val {{
-    font-size: 1.65rem; font-weight: 700;
-    color: {LN_NAVY}; line-height: 1.1;
-}}
-.kpi-d {{ font-size: 0.7rem; margin-top: 5px; font-weight: 500; }}
-.dg {{ color: {LN_GREEN}; }} .dr {{ color: #dc2626; }}
-
-/* ── SECTION HEADING ── */
-.sh {{
-    font-size: 1.05rem; font-weight: 700;
-    color: {LN_NAVY}; margin: 24px 0 12px 0;
-    display: flex; align-items: center; gap: 10px;
-    border-left: 4px solid {LN_GREEN};
-    padding-left: 12px;
-}}
-
-/* ── INFO / WARN / OK BOXES ── */
-.info-box {{
-    background: #f0fdf4; border-left: 4px solid {LN_GREEN};
-    border-radius: 8px; padding: 14px 18px; margin: 4px 0 16px 0;
-    font-size: 0.88rem; line-height: 1.7; color: {LN_NAVY};
-}}
-.info-box b {{ color: {LN_DGREEN}; }}
-.warn-box {{
-    background: #fffbeb; border-left: 4px solid #f59e0b;
-    border-radius: 6px; padding: 12px 16px; margin: 6px 0;
-    font-size: 0.86rem; line-height: 1.65; color: {LN_NAVY};
-}}
-.ok-box {{
-    background: #f0fdf4; border-left: 4px solid {LN_GREEN};
-    border-radius: 6px; padding: 12px 16px; margin: 6px 0;
-    font-size: 0.86rem; line-height: 1.65; color: {LN_NAVY};
-}}
-.tag-red    {{ color: #dc2626; font-weight: 600; }}
-.tag-green  {{ color: {LN_GREEN}; font-weight: 600; }}
-.tag-yellow {{ color: #d97706; font-weight: 600; }}
-
-/* ── CHAT RAG STYLING ── */
-.rag-header {{
-    background: linear-gradient(135deg, {LN_NAVY} 0%, #2a5f3a 100%);
-    border-radius: 12px; padding: 20px 24px; margin-bottom: 20px;
-    display: flex; align-items: center; gap: 16px;
-    color: white;
-}}
-.rag-icon {{
-    width: 52px; height: 52px; border-radius: 12px;
-    background: {LN_GREEN}; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
     font-size: 1.6rem;
-}}
-.rag-title {{ font-size: 1.1rem; font-weight: 700; margin-bottom: 2px; }}
-.rag-sub   {{ font-size: 0.78rem; color: #94a3b8; }}
-
-/* ── LEGEND ROW ── */
-.legend-row {{
-    display: flex; align-items: flex-start; gap: 10px;
-    font-size: 0.84rem; color: {LN_NAVY};
-    margin-bottom: 10px; padding-bottom: 10px;
-    border-bottom: 1px solid {LN_BORDER};
-}}
-.legend-row:last-child {{ border-bottom: none; margin-bottom: 0; }}
-.legend-dot {{
-    width: 14px; height: 14px; border-radius: 3px;
-    flex-shrink: 0; margin-top: 3px;
+    font-weight: 700;
+    color: {LN_NAVY};
 }}
 
-/* ── SIDEBAR ── */
+.kpi-d {{
+    font-size: 0.8rem;
+}}
+
+.dg {{
+    color: {LN_GREEN};
+}}
+
+.dr {{
+    color: #dc2626;
+}}
+
+/* HEADINGS */
+.sh {{
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 30px 0 12px;
+    border-left: 4px solid {LN_GREEN};
+    padding-left: 10px;
+}}
+
+/* INFO BOX */
+.info-box {{
+    background: #f0fdf4;
+    border-left: 4px solid {LN_GREEN};
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}}
+
+.warn-box {{
+    background: #fffbeb;
+    border-left: 4px solid #f59e0b;
+    padding: 12px 16px;
+    border-radius: 6px;
+}}
+
+.ok-box {{
+    background: #f0fdf4;
+    border-left: 4px solid {LN_GREEN};
+    padding: 12px 16px;
+    border-radius: 6px;
+}}
+
+/* SIDEBAR */
 [data-testid="stSidebar"] {{
     background: white !important;
-    border-right: 2px solid {LN_BORDER} !important;
-}}
-.sb-logo {{
-    display: flex; align-items: center; gap: 10px;
-    margin-bottom: 4px;
-}}
-.sb-logo-box {{
-    width: 36px; height: 36px; background: {LN_NAVY};
-    border-radius: 6px; color: white; font-weight: 800;
-    font-size: 1.1rem; display: flex; align-items: center; justify-content: center;
-}}
-.sb-brand {{ font-size: 1.1rem; font-weight: 700; color: {LN_NAVY}; }}
-.sb-brand span {{ color: {LN_GREEN}; }}
-.sb-sub {{
-    font-size: 0.58rem; color: #94a3b8; text-transform: uppercase;
-    letter-spacing: 0.14em; margin-bottom: 1.4rem; padding-left: 46px;
-}}
-.sb-sec {{
-    font-size: 0.6rem; font-weight: 700;
-    color: {LN_GREEN}; letter-spacing: 0.16em;
-    text-transform: uppercase; margin: 1.2rem 0 0.4rem 0;
-    border-bottom: 1px solid {LN_BORDER}; padding-bottom: 4px;
-}}
-.sb-stat {{
-    font-size: 0.72rem; color: #64748b;
-    line-height: 2.2; font-family: monospace;
+    border-right: 1px solid {LN_BORDER};
 }}
 
-[data-testid="metric-container"] {{
-    background: white; border: 1px solid {LN_BORDER};
-    border-radius: 10px; padding: 12px 16px !important;
+.sb-logo {{
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }}
+
+.sb-logo-box {{
+    width: 36px;
+    height: 36px;
+    background: black;
+    color: white;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}}
+
+.sb-brand {{
+    font-size: 1.1rem;
+    font-weight: 700;
+}}
+
+.sb-brand span {{
+    color: {LN_GREEN};
+}}
+
+.sb-sub {{
+    font-size: 0.6rem;
+    color: #94a3b8;
+    margin-bottom: 1.2rem;
+}}
+
+.sb-sec {{
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: {LN_GREEN};
+    border-bottom: 1px solid {LN_BORDER};
+    padding-bottom: 4px;
+}}
+
+.sb-stat {{
+    font-size: 0.75rem;
+    line-height: 2;
+}}
+
+/* METRICS */
+[data-testid="metric-container"] {{
+    background: white;
+    border: 1px solid {LN_BORDER};
+    border-radius: 8px;
+    padding: 12px 16px;
+}}
+
 </style>
 """, unsafe_allow_html=True)
-
 # ─────────────────────────────────────────────────────────────────────────────
 # HELPERS
 # ─────────────────────────────────────────────────────────────────────────────
