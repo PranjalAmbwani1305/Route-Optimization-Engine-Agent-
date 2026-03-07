@@ -473,7 +473,7 @@ elif pg == "🤖 LoRRI AI Assistant":
         "Vectorless RAG · LangChain-style Pipeline · Pandas Retrieval · Rule-Based Router"
     )
 
-    # ── SESSION STATE INITIALIZATION FIRST ─────────────────────────
+    # ── SESSION STATE INITIALIZATION ─────────────────
     if "msgs" not in st.session_state:
         st.session_state.msgs = []
 
@@ -481,28 +481,133 @@ elif pg == "🤖 LoRRI AI Assistant":
         st.session_state.chip_prompt = None
 
 
-    # ── CHAT HISTORY ───────────────────────────────────────────────
-    for role, msg in st.session_state.msgs:
-        with st.chat_message(role):
-            st.markdown(msg)
+    # ── CHIP QUESTIONS ───────────────────────────────
+    CHIP_QUESTIONS = [
+        ("What is LoRRI?", "🏢"),
+        ("How much did we save in ₹?", "💰"),
+        ("Which cities were late?", "⚠️"),
+        ("Which truck costs most?", "🚛"),
+        ("Truck 3 route?", "🗺️"),
+        ("Carbon savings?", "🌿"),
+        ("Explain why Truck 3 route changed", "🧠"),
+        ("Predict tomorrow's traffic risk", "🚦"),
+        ("Suggest cost saving actions", "💡"),
+        ("Contact LogisticsNow", "📞"),
+    ]
+
+    st.markdown("### 💡 Click to ask")
+
+    chip_cols = st.columns(5)
+
+    chip_clicked = False
+
+    for idx, (question, emoji) in enumerate(CHIP_QUESTIONS):
+        with chip_cols[idx % 5]:
+            if st.button(f"{emoji} {question}", key=f"chip_{idx}"):
+                st.session_state.chip_prompt = question
+                chip_clicked = True
+
+    if chip_clicked:
+        st.rerun()
 
 
-    # ── CHAT INPUT ─────────────────────────────────────────────────
-    prompt = st.chat_input("Ask about LoRRI, fleet data, ₹ costs, routes, SLA...")
+    # ── INITIAL MESSAGE ──────────────────────────────
+    if not st.session_state.msgs:
+        with st.chat_message("assistant"):
+            st.markdown(
+                f"""
+**Namaste! 🙏 Welcome to the LoRRI Intelligence Assistant**
 
-    if prompt:
+I use a **4-step RAG pipeline**:
 
-        st.session_state.msgs.append(("user", prompt))
+⚡ Rule Router → 📚 RAG Retriever → 🐼 Pandas Query → 🤖 LLM Synthesis
+
+Fleet snapshot:
+- Shipments: **{opt['n_ships']}**
+- Trucks: **{opt['n_vehicles']}**
+- Cost: **₹{opt['total_cost']:,.0f}**
+- SLA: **{opt['sla_pct']:.0f}%**
+
+Click a chip above or type your question below.
+"""
+            )
+
+
+    # ── DISPLAY CHAT HISTORY ─────────────────────────
+    for m in st.session_state.msgs:
+
+        with st.chat_message(m["role"]):
+
+            st.markdown(m["content"])
+
+
+    # ── CHAT INPUT ───────────────────────────────────
+    typed_prompt = st.chat_input(
+        "Ask about LoRRI, fleet data, ₹ costs, routes, SLA...",
+        key="lorri_chat_input"
+    )
+
+    final_prompt = st.session_state.pop("chip_prompt", None)
+
+    if typed_prompt:
+        final_prompt = typed_prompt
+
+
+    # ── PROCESS QUERY ────────────────────────────────
+    if final_prompt:
+
+        st.session_state.msgs.append(
+            {"role": "user", "content": final_prompt}
+        )
 
         with st.chat_message("user"):
-            st.markdown(prompt)
+            st.markdown(final_prompt)
 
-        response = "LoRRI AI assistant processing your request..."
 
-        st.session_state.msgs.append(("assistant", response))
+        api_history = [
+            {"role": m["role"], "content": m["content"]}
+            for m in st.session_state.msgs[-10:]
+        ]
+
 
         with st.chat_message("assistant"):
-            st.markdown(response)
+
+            with st.spinner("Running RAG pipeline..."):
+
+                reply, conf, source, chunks = call_rag_pipeline(
+                    final_prompt,
+                    api_history
+                )
+
+            st.markdown(reply)
+
+
+        st.session_state.msgs.append(
+            {
+                "role": "assistant",
+                "content": reply,
+                "meta": {
+                    "conf": conf,
+                    "source": source,
+                    "chunks": chunks
+                }
+            }
+        )
+
+        st.rerun()
+
+
+    # ── CLEAR CHAT BUTTON ────────────────────────────
+    if st.session_state.msgs:
+
+        st.markdown("---")
+
+        if st.button("🗑 Clear conversation"):
+
+            st.session_state.msgs = []
+
+            st.rerun()
+            
     # ── FOOTER (PLACED LAST) ────────────────────────────────────────────────
     
 
@@ -1118,7 +1223,10 @@ RULES:
 
     # Also render the chat_input widget; if user typed, that overrides nothing —
     # both chip and typed prompts are handled the same way.
-    typed_prompt = st.chat_input("Ask about LoRRI, fleet data, ₹ costs, routes, SLA...")
+    typed_prompt = st.chat_input(
+    "Ask about LoRRI, fleet data, ₹ costs, routes, SLA...",
+    key="lorri_chat_input"
+    )
     if typed_prompt:
         final_prompt = typed_prompt
 
