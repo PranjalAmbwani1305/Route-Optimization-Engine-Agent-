@@ -468,6 +468,43 @@ if pg == "🏢 About LoRRI":
 # ══════════════════════════════════════════════════════════════════════════════
 elif pg == "🤖 LoRRI AI Assistant":
     page_header("🤖 LoRRI AI Assistant", "Vectorless RAG · LangChain-style Pipeline · Pandas Retrieval · Rule-Based Router")
+    if pg == "🤖 LoRRI AI Assistant":
+
+    page_header("🤖 LoRRI AI Assistant", "Vectorless RAG · LangChain-style Pipeline · Pandas Retrieval · Rule-Based Router")
+
+    # chat history
+    for role, msg in st.session_state.messages:
+        with st.chat_message(role):
+            st.markdown(msg)
+
+    # user input
+    prompt = st.chat_input("Ask about LoRRI, fleet data, ₹ costs, routes, SLA...")
+
+    if prompt:
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+    st.markdown(f"""
+    <div style="margin-top:30px;">
+        <div style="background:{LN_NAVY};color:white;padding:18px 28px;
+        border-radius:10px;display:flex;justify-content:space-between;">
+            <div>
+                <b>Logistics<span style="color:{LN_GREEN};">Now</span></b> · LoRRI AI Route Optimization Engine
+                <div style="font-size:0.8rem;color:#94a3b8;">
+                Problem Statement 4 · Synapflow Hackathon
+                </div>
+            </div>
+
+            <div style="font-size:0.85rem;color:#cbd5e1;">
+                connect@logisticsnow.in
+            </div>
+        </div>
+
+        <div style="text-align:center;margin-top:10px;font-size:0.75rem;color:#64748b;">
+        🟢 Last updated: {now}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     # ── SESSION STATE INITIALISATION ─────────────────────────────────────────
     if "msgs"        not in st.session_state: st.session_state.msgs        = []
