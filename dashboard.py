@@ -383,93 +383,94 @@ with st.sidebar:
 # PAGE: ABOUT LORRI
 # ══════════════════════════════════════════════════════════════════════════════
 if pg == "🏢 About LoRRI":
+
     page_header("🏢 About LoRRI", "LogisticsNow · AI-Powered Logistics Intelligence Platform")
 
-st.markdown(f"""
-<div style="background:white;border-radius:14px;
-border:1px solid {LN_BORDER};
-padding:34px 36px;margin-bottom:22px;
-border-top:5px solid {LN_GREEN};">
+    st.markdown(f"""
+    <div style="background:white;border-radius:14px;
+    border:1px solid {LN_BORDER};
+    padding:34px 36px;margin-bottom:22px;
+    border-top:5px solid {LN_GREEN};">
 
-<div style="font-size:1.6rem;font-weight:700;color:{LN_NAVY};margin-bottom:8px;">
-🚚 LoRRI — Logistics Intelligence Platform
-</div>
-
-<div style="font-size:0.9rem;color:#64748b;margin-bottom:18px;">
-AI-Powered Logistics Optimization Engine
-</div>
-
-<p style="font-size:0.92rem;color:#334155;line-height:1.85;margin-bottom:12px;">
-Modern logistics networks generate massive operational data, yet routing decisions are still
-often based on <b>static planning and manual assumptions</b>. This leads to unnecessary fuel costs,
-delivery delays, inefficient truck utilization, and increased carbon emissions.
-</p>
-
-<p style="font-size:0.92rem;color:#334155;line-height:1.85;margin-bottom:0;">
-<b>LoRRI (Logistics Rating & Intelligence)</b> transforms logistics operations into an
-<b>AI-driven decision intelligence platform</b>. By combining real-time data,
-optimization algorithms, and interactive analytics dashboards,
-LoRRI enables organizations to <b>optimize routes, reduce costs,
-improve delivery reliability, and minimize environmental impact</b>.
-</p>
-
-</div>
-""", unsafe_allow_html=True)
-
-
-st.markdown(f'<div class="sh">🌍 Our Vision</div>', unsafe_allow_html=True)
-
-st.markdown(f"""
-<div style="background:{LN_NAVY};border-radius:12px;
-padding:26px 30px;color:white;margin-bottom:24px;">
-
-<p style="font-size:0.92rem;line-height:1.9;color:#cbd5e1;margin:0;">
-Our vision is to build a <b style="color:white;">global logistics intelligence platform</b>
-where transportation networks operate as <b style="color:{LN_GREEN};">
-autonomous, data-driven systems</b>.
-</p>
-
-<p style="font-size:0.92rem;line-height:1.9;color:#cbd5e1;margin-top:12px;">
-By integrating <b style="color:white;">AI optimization</b>, 
-<b style="color:white;">real-time analytics</b>, and 
-<b style="color:white;">sustainability metrics</b>,
-LoRRI empowers supply chains to become more efficient,
-resilient, and environmentally responsible.
-</p>
-
-</div>
-""", unsafe_allow_html=True)
-
-
-st.markdown(f'<div class="sh">⚙️ Key Platform Capabilities</div>', unsafe_allow_html=True)
-
-col1, col2, col3, col4 = st.columns(4)
-
-features = [
-("🚛","AI Route Optimization","Dynamic multi-objective routing balancing cost, time, carbon emissions, and SLA constraints."),
-("📊","Operational Intelligence","Real-time analytics dashboard showing fleet performance, cost efficiency, and route insights."),
-("🌿","Sustainability Monitoring","Measure carbon emissions per route and identify greener transportation strategies."),
-("⚡","Adaptive Re-optimization","Automatically adjust routes during traffic disruptions or priority shipment escalations.")
-]
-
-for col,(icon,title,desc) in zip([col1,col2,col3,col4],features):
-    col.markdown(f"""
-    <div style="background:white;border:1px solid {LN_BORDER};
-    border-radius:12px;padding:18px;height:180px;
-    border-top:3px solid {LN_GREEN};">
-
-    <div style="font-size:1.6rem;margin-bottom:6px;">{icon}</div>
-
-    <div style="font-size:0.85rem;font-weight:700;color:{LN_NAVY};margin-bottom:6px;">
-    {title}
+    <div style="font-size:1.6rem;font-weight:700;color:{LN_NAVY};margin-bottom:8px;">
+    🚚 LoRRI — Logistics Intelligence Platform
     </div>
 
-    <div style="font-size:0.75rem;color:#64748b;line-height:1.6;">
-    {desc}
+    <div style="font-size:0.9rem;color:#64748b;margin-bottom:18px;">
+    AI-Powered Logistics Optimization Engine
     </div>
+
+    <p style="font-size:0.92rem;color:#334155;line-height:1.85;margin-bottom:12px;">
+    Modern logistics networks generate massive operational data, yet routing decisions are still
+    often based on <b>static planning and manual assumptions</b>. This leads to unnecessary fuel costs,
+    delivery delays, inefficient truck utilization, and increased carbon emissions.
+    </p>
+
+    <p style="font-size:0.92rem;color:#334155;line-height:1.85;margin-bottom:0;">
+    <b>LoRRI (Logistics Rating & Intelligence)</b> transforms logistics operations into an
+    <b>AI-driven decision intelligence platform</b>. By combining real-time data,
+    optimization algorithms, and interactive analytics dashboards,
+    LoRRI enables organizations to <b>optimize routes, reduce costs,
+    improve delivery reliability, and minimize environmental impact</b>.
+    </p>
 
     </div>
     """, unsafe_allow_html=True)
+
+    # Vision Section
+    st.markdown(f'<div class="sh">🌍 Our Vision</div>', unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <div style="background:{LN_NAVY};border-radius:12px;
+    padding:26px 30px;color:white;margin-bottom:24px;">
+
+    <p style="font-size:0.92rem;line-height:1.9;color:#cbd5e1;margin:0;">
+    Our vision is to build a <b style="color:white;">global logistics intelligence platform</b>
+    where transportation networks operate as <b style="color:{LN_GREEN};">
+    autonomous, data-driven systems</b>.
+    </p>
+
+    <p style="font-size:0.92rem;line-height:1.9;color:#cbd5e1;margin-top:12px;">
+    By integrating <b style="color:white;">AI optimization</b>, 
+    <b style="color:white;">real-time analytics</b>, and 
+    <b style="color:white;">sustainability metrics</b>,
+    LoRRI empowers supply chains to become more efficient,
+    resilient, and environmentally responsible.
+    </p>
+
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Capabilities Section
+    st.markdown(f'<div class="sh">⚙️ Key Platform Capabilities</div>', unsafe_allow_html=True)
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    features = [
+        ("🚛","AI Route Optimization","Dynamic multi-objective routing balancing cost, time, carbon emissions, and SLA constraints."),
+        ("📊","Operational Intelligence","Real-time analytics dashboard showing fleet performance, cost efficiency, and route insights."),
+        ("🌿","Sustainability Monitoring","Measure carbon emissions per route and identify greener transportation strategies."),
+        ("⚡","Adaptive Re-optimization","Automatically adjust routes during traffic disruptions or priority shipment escalations.")
+    ]
+
+    for col,(icon,title,desc) in zip([col1,col2,col3,col4],features):
+        col.markdown(f"""
+        <div style="background:white;border:1px solid {LN_BORDER};
+        border-radius:12px;padding:18px;height:180px;
+        border-top:3px solid {LN_GREEN};">
+
+        <div style="font-size:1.6rem;margin-bottom:6px;">{icon}</div>
+
+        <div style="font-size:0.85rem;font-weight:700;color:{LN_NAVY};margin-bottom:6px;">
+        {title}
+        </div>
+
+        <div style="font-size:0.75rem;color:#64748b;line-height:1.6;">
+        {desc}
+        </div>
+
+        </div>
+        """, unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PAGE: AI ASSISTANT  —  Vectorless RAG + LangChain-style Pipeline
