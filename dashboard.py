@@ -1535,72 +1535,18 @@ elif pg == "🌿 Carbon & SLA":
         fig_g.update_layout(height=300, paper_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig_g, use_container_width=True)
 
-        # ── GEOGRAPHIC HEATMAP: carbon + SLA overlay on India map ──────────
-        hm_df = routes.copy()
-        # Normalise carbon for bubble size (10–40px range)
-        c_max = hm_df["carbon_kg"].max() if hm_df["carbon_kg"].max() > 0 else 1
-        hm_df["bubble"] = (hm_df["carbon_kg"] / c_max * 30 + 10).clip(10, 40)
-        hm_df["breach_flag"] = hm_df["sla_breach_hr"] > 0
-        # Color by vehicle
-        hm_df["color"] = hm_df["vehicle"].apply(lambda v: V_COLORS.get(v, "#999"))
-        hm_df["sla_txt"] = hm_df["sla_breach_hr"].apply(
-            lambda x: f"⚠️ {x:.1f}hr late" if x > 0 else "✅ On time")
-        hm_df["truck_lbl"] = hm_df["vehicle"].apply(lambda v: truck_name(v))
-
-        fig_h = go.Figure()
-        # Base layer — all stops as translucent bubbles sized by carbon
-        fig_h.add_trace(go.Scattermap(
-            lat=hm_df["latitude"], lon=hm_df["longitude"],
-            mode="markers",
-            marker=dict(
-                size=hm_df["bubble"].tolist(),
-                color=hm_df["carbon_kg"].tolist(),
-                colorscale=[[0,"rgba(255,200,200,0.3)"],[0.5,"rgba(220,38,38,0.6)"],[1,"rgba(153,0,0,0.9)"]],
-                cmin=0, cmax=float(c_max),
-                opacity=0.55,
-                colorbar=dict(title="CO₂ kg", thickness=10, x=1.0)),
-            hovertext=[
-                f"{row['city']}<br>{row['truck_lbl']}<br>"
-                f"CO₂: {row['carbon_kg']:.1f} kg<br>{row['sla_txt']}"
-                for _, row in hm_df.iterrows()],
-            hoverinfo="text", name="CO₂ intensity"))
-        # SLA breach highlight — red ring on breached stops
-        bd2 = hm_df[hm_df["breach_flag"]]
-        if not bd2.empty:
-            fig_h.add_trace(go.Scattermap(
-                lat=bd2["latitude"], lon=bd2["longitude"],
-                mode="markers",
-                marker=dict(size=bd2["bubble"].tolist(),
-                            color="rgba(220,38,38,0.0)",
-                            size_max=40),
-                hoverinfo="skip", showlegend=False))
-            fig_h.add_trace(go.Scattermap(
-                lat=bd2["latitude"], lon=bd2["longitude"],
-                mode="markers+text",
-                marker=dict(size=16, color="#dc2626", opacity=0.9),
-                text=["⚠️"] * len(bd2),
-                textfont=dict(size=10),
-                textposition="middle center",
-                hovertext=[
-                    f"⚠️ SLA BREACH<br>{row['city']}<br>"
-                    f"{row['truck_lbl']} — {row['sla_breach_hr']:.1f}hr late"
-                    for _, row in bd2.iterrows()],
-                hoverinfo="text", name="SLA Breach"))
-        # Depot star
-        fig_h.add_trace(go.Scattermap(
-            lat=[DEPOT["latitude"]], lon=[DEPOT["longitude"]],
-            mode="markers+text", text=["Depot"],
-            textposition="top right", textfont=dict(size=9, color="#0f2d1f"),
-            marker=dict(size=16, color=LN_NAVY, symbol="star"),
-            name="Mumbai Depot"))
-        fig_h.update_layout(
-            map_style="open-street-map",
-            map=dict(center=dict(lat=20.5, lon=78.9), zoom=3.8),
-            height=370, margin=dict(l=0, r=0, t=30, b=0),
-            title=dict(text="Carbon Intensity & SLA Breach Map", font=dict(size=13)),
-            legend=dict(x=0.01, y=0.99, bgcolor="rgba(255,255,255,0.88)",
-                        bordercolor=LN_BORDER, borderwidth=1),
-            paper_bgcolor="rgba(0,0,0,0)")
+        # ── HEATMAP: SLA Breaches — Truck × Priority (from dashboard.py) ───
+        bd = routes.copy()
+        bd["breached"] = (bd["sla_breach_hr"] > 0).astype(int)
+        piv = bd.groupby(["vehicle","priority"])["breached"].sum().unstack(fill_value=0)
+        fig_h = go.Figure(go.Heatmap(
+            z=piv.values,
+            x=piv.columns.tolist(),
+            y=[truck_name(v) for v in piv.index],
+            colorscale=[[0,"rgba(255,220,220,1)"],[0.5,"rgba(220,38,38,0.8)"],[1,"rgba(153,0,0,1)"]],
+            text=piv.values, texttemplate="%{text}",
+            colorbar=dict(title="Breaches")))
+        apply_theme(fig_h, height=260, title="SLA Breaches: Truck × Priority")
         st.plotly_chart(fig_h, use_container_width=True)
 
     bdf = routes[routes["sla_breach_hr"]>0][
