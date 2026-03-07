@@ -372,12 +372,8 @@ with st.sidebar:
     st.markdown(f"""
     <div style="font-size:0.65rem;color:#94a3b8;line-height:1.8;">
     📧 connect@logisticsnow.in<br>
-    📞 +91-9867773508<br>
     🌐 logisticsnow.in
     </div>""", unsafe_allow_html=True)
-
-# ─────────────────────────────────────────────────────────────────────────────
-# TOP BAR + NAVBAR + HERO
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PAGE: ABOUT LORRI
@@ -1972,11 +1968,10 @@ st.markdown(f"""
     <div>
         <b style="color:white;font-size:0.9rem;">Logistics<span style="color:{LN_GREEN}">Now</span></b>
         · LoRRI AI Route Optimization Engine<br>
-        Problem Statement 4 · Synapflow Hackathon · Mumbai Depot
+        Problem Statement 4 · Synapflow Hackathon 
     </div>
     <div style="text-align:right;">
         📧 connect@logisticsnow.in<br>
-        All costs in ₹ INR · Multi-Objective CVRP · Permutation-Based Explainability
     </div>
 </div>
 """, unsafe_allow_html=True)
