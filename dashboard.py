@@ -77,20 +77,13 @@ def kpi_card(label, value, delta, good=True, ac=None):
         f'<div class="kpi-d {cls}">{delta}</div></div>'
     )
 
-def page_header(title, subtitle=""):
+def page_header(title: str, subtitle: str = ""):
 
-    sub_html = f'<div style="font-size:0.8rem;color:#64748b;margin-top:2px;">{subtitle}</div>' if subtitle else ""
     st.markdown(f"""
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;
-                margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
         <div>
-            <div style="font-size:1.25rem;font-weight:700;color:{LN_NAVY};">{title}</div>
-            {sub_html}
-        </div>
-        <div style="background:white;border:1px solid {LN_BORDER};border-radius:8px;
-                    padding:6px 14px;font-size:0.72rem;color:#64748b;white-space:nowrap;
-                    display:flex;align-items:center;gap:6px;">
-            <span style="color:{LN_GREEN};">●</span> Last updated: <b style="color:{LN_NAVY};">{now}</b>
+            <h2 style="margin:0;color:{LN_NAVY};">{title}</h2>
+            <div style="color:#64748b;font-size:0.85rem;">{subtitle}</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
