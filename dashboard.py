@@ -1240,20 +1240,3 @@ elif pg == "⚡ Re-optimization Simulator":
 
 # CLOSE content-area div
 st.markdown("</div>", unsafe_allow_html=True)
-
-# ─────────────────────────────────────────────────────────────────────────────
-# FOOTER (LogisticsNow style)
-# ─────────────────────────────────────────────────────────────────────────────
-st.markdown(f"""
-<div style="background:{LN_NAVY};color:#94a3b8;padding:20px 40px;margin-top:20px;
-            font-size:0.75rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-    <div>
-        <b style="color:white;font-size:0.9rem;">Logistics<span style="color:{LN_GREEN}">Now</span></b> · LoRRI AI Route Optimization Engine<br>
-        Problem Statement 4 · Synapflow Hackathon · Mumbai Depot
-    </div>
-    <div style="text-align:right;">
-        📧 connect@logisticsnow.in &nbsp;|&nbsp; 📞 +91-9867773508<br>
-        All costs in ₹ INR · Multi-Objective CVRP · Permutation-Based Explainability
-    </div>
-</div>
-""", unsafe_allow_html=True)
