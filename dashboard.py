@@ -439,11 +439,10 @@ PRICING MODEL: All costs in Indian Rupees (₹ INR)
 # SIDEBAR
 # ─────────────────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown(f"""
-    <div class="sb-logo">
-        <img src="logo.png" style="height:38px;margin-right:6px;">
-        <div class="sb-brand">Logistics<span>Now</span></div>
-    </div>
+    st.image("logo.png", width=140)
+
+    st.markdown("""
+    <div class="sb-brand">Logistics<span>Now</span></div>
     <div class="sb-sub">LoRRI AI Route Engine</div>
     """, unsafe_allow_html=True)
   
