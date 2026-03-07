@@ -13,6 +13,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 from math import radians, cos, sin, asin, sqrt
 import time
+from streamlit_autorefresh import st_autorefresh
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PAGE CONFIG
@@ -23,7 +24,7 @@ st.set_page_config(
     page_icon="🚚",
     initial_sidebar_state="expanded",
 )
-
+st_autorefresh(interval=10000, key="live_stats")
 # ─────────────────────────────────────────────────────────────────────────────
 # BRAND COLORS  (from LogisticsNow website)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -529,15 +530,23 @@ with st.sidebar:
     if st.button("🔄 Sync Depot Data", use_container_width=True):
         st.toast("✅ Synced with Mumbai Depot!", icon="🏭")
 
-    st.markdown(f'<div class="sb-sec">📦 Live Stats</div>', unsafe_allow_html=True)
+shipments_count = len(ships)
+    trucks_count = veh_sum["vehicle"].nunique()
+    sla_ok = int((routes["sla_breach_hr"] == 0).sum() / len(routes) * 100)
+    breaches = int((routes["sla_breach_hr"] > 0).sum())
+    depot = "Mumbai"
+
     st.markdown(f"""
+    <div class="sb-sec">📦 Live Stats</div>
+
     <div class="sb-stat">
-    Shipments &nbsp; <b style="color:{LN_NAVY}">{opt['n_ships']}</b><br>
-    Trucks &nbsp;&nbsp;&nbsp;&nbsp; <b style="color:{LN_NAVY}">{opt['n_vehicles']}</b><br>
-    SLA OK &nbsp;&nbsp;&nbsp;&nbsp; <b style="color:{LN_GREEN}">{opt['sla_pct']:.0f}%</b><br>
-    Breaches &nbsp;&nbsp; <b style="color:#dc2626">{opt['breaches']}</b><br>
-    Depot &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b style="color:{LN_NAVY}">Mumbai</b>
-    </div>""", unsafe_allow_html=True)
+    Shipments &nbsp; <b>{shipments_count}</b><br>
+    Trucks &nbsp;&nbsp;&nbsp;&nbsp; <b>{trucks_count}</b><br>
+    SLA OK &nbsp;&nbsp;&nbsp;&nbsp; <b style="color:#22c55e">{sla_ok}%</b><br>
+    Breaches &nbsp;&nbsp; <b style="color:#ef4444">{breaches}</b><br>
+    Depot &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Mumbai</b>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.markdown("---")
     st.markdown(f"""
