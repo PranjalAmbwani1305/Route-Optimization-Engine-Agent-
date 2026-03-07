@@ -78,7 +78,7 @@ def kpi_card(label, value, delta, good=True, ac=None):
     )
 
 def page_header(title, subtitle=""):
-    now = datetime.datetime.now().strftime("%d %b %Y, %I:%M %p")
+
     sub_html = f'<div style="font-size:0.8rem;color:#64748b;margin-top:2px;">{subtitle}</div>' if subtitle else ""
     st.markdown(f"""
     <div style="display:flex;align-items:flex-start;justify-content:space-between;
