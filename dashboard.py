@@ -447,7 +447,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
   
 
-    st.markdown(f'<div class="sb-sec">🏢 Platform</div>', unsafe_allow_html=True)
+    
     st.markdown(f'<div class="sb-sec">📊 Analytics Suite</div>', unsafe_allow_html=True)
 
     pg = st.radio("nav", [
@@ -480,65 +480,8 @@ with st.sidebar:
     st.markdown("---")
     st.markdown(f"""
     <div style="font-size:0.65rem;color:#94a3b8;line-height:1.8;">
-    📧 connect@logisticsnow.in<br>
-    📞 +91-9867773508<br>
     🌐 logisticsnow.in
     </div>""", unsafe_allow_html=True)
-
-# ─────────────────────────────────────────────────────────────────────────────
-# TOP BAR + NAVBAR (LogisticsNow style)
-# ─────────────────────────────────────────────────────────────────────────────
-st.markdown(f"""
-<div class="topbar">
-    <div style="display:flex;gap:24px;">
-        <span>✉ connect@logisticsnow.in</span>
-        <span>📞 +91-9867773508 / +91-9653620207</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:16px;">
-        <span style="font-size:0.7rem;letter-spacing:0.05em;">IN · LI · FB · IG</span>
-        <a href="#" style="background:{LN_GREEN};color:white;padding:5px 14px;border-radius:3px;font-size:0.7rem;font-weight:600;text-decoration:none;letter-spacing:0.05em;">
-            LORRI &nbsp; SCHEDULE A DEMO ›
-        </a>
-    </div>
-</div>
-<div class="navbar">
-    <div class="logo-wrap">
-        <div class="logo-n">LN</div>
-        <div class="logo-text">Logistics<span>Now</span></div>
-    </div>
-    <div class="nav-links">
-        <a class="nav-link" href="#">Home</a>
-        <a class="nav-link" href="#">About Us</a>
-        <a class="nav-link" href="#">Products</a>
-        <a class="nav-link" href="#">Careers</a>
-        <a class="nav-link" href="#">News & Events</a>
-        <a class="nav-link" href="#">Contact Us</a>
-    </div>
-    <div class="nav-cta">LoRRI &nbsp; SCHEDULE A DEMO ›</div>
-</div>
-""", unsafe_allow_html=True)
-
-# HERO BANNER
-st.markdown(f"""
-<div class="hero-banner">
-    <div class="hero-title">LoRRI: <span>AI Route Optimization Engine</span></div>
-    <div class="hero-sub">Dynamic Multi-Objective CVRP · India Logistics Network · Depot: Mumbai · All costs in ₹ INR</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <div class="hero-badge">● MUMBAI HUB: LIVE</div>
-        <div class="hero-badge" style="border-color:#1e7abf;color:#7ec8ff;background:rgba(30,122,191,0.2);">
-            Problem Statement 4 — Synapflow Hackathon
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-# BREADCRUMB
-st.markdown(f"""
-<div class="content-area">
-<div class="breadcrumb">
-    📍 <a href="#">Home</a> › <a href="#">Products</a> › <a href="#">LoRRI</a> › AI Route Optimization
-</div>
-""", unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PAGE 0: ABOUT LORRI — from Synapflow Problem Statement 4 PDF
