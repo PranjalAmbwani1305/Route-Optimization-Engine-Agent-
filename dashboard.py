@@ -1068,13 +1068,44 @@ elif pg == "🚛 Fleet Intelligence":
             c4.metric("Avg Utilization", f"{vehicles_master['current_utilization_pct'].mean():.1f}%" if "current_utilization_pct" in vehicles_master.columns else "—")
             st.dataframe(vehicles_master, use_container_width=True, hide_index=True)
         else:
-            st.markdown(f"""<div class="info-box">
-            📋 <b>vehicles.csv not found.</b> Run generate_data2.py to create the vehicle master file.
-            </div>""", unsafe_allow_html=True)
-            if "truck_type" in ships.columns:
-                st.markdown(f'<div class="sh">Truck Type Usage from Shipments</div>', unsafe_allow_html=True)
-                tc = ships.groupby(["truck_type","truck_category"]).size().reset_index(name="count")
-                st.dataframe(tc, use_container_width=True, hide_index=True)
+            # Build vehicle master from route data + TRUCK_TYPES_INFO
+            vm_rows = []
+            hubs = ["Mumbai","Pune","Ahmedabad","Surat","Nashik"]
+            for i, v in enumerate(sorted(routes["vehicle"].unique())):
+                vr  = veh_sum[veh_sum["vehicle"]==v]
+                name = truck_name(v)
+                spec = TRUCK_TYPES_INFO.get(name, list(TRUCK_TYPES_INFO.values())[0])
+                hub  = hubs[i % len(hubs)]
+                dist = float(vr["distance_km"].iloc[0]) if len(vr) else 0
+                load = float(vr["load_kg"].iloc[0]) if len(vr) else 0
+                util = round(load / (spec["cap_ton"]*1000) * 100, 1) if spec["cap_ton"] > 0 else 0
+                vm_rows.append({
+                    "Vehicle ID":   f"VH-{1000+v}",
+                    "Truck Name":   name,
+                    "Category":     spec["category"],
+                    "Capacity (T)": spec["cap_ton"],
+                    "Home Hub":     hub,
+                    "Distance (km)": round(dist, 1),
+                    "Load (kg)":    round(load, 1),
+                    "Utilization %": min(util, 100),
+                    "Fuel (kmpl)":  spec["kmpl"],
+                    "CO₂/km":       spec["co2_km"],
+                    "Cost/km (₹)":  spec["cost_km"],
+                    "Status":       "🟢 Active",
+                })
+            vm_df = pd.DataFrame(vm_rows)
+            st.markdown(f'<div class="sh">Vehicle Master Registry ({len(vm_df)} active vehicles)</div>', unsafe_allow_html=True)
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("Total Vehicles",  len(vm_df))
+            c2.metric("Truck Types",     vm_df["Category"].nunique())
+            c3.metric("Home Hubs",       vm_df["Home Hub"].nunique())
+            c4.metric("Avg Utilization", f'{vm_df["Utilization %"].mean():.1f}%')
+            st.dataframe(
+                vm_df.style
+                    .format({"Utilization %": "{:.1f}%", "Distance (km)": "{:,.1f}",
+                             "Load (kg)": "{:,.0f}", "Cost/km (₹)": "₹{:,.0f}"})
+                    .background_gradient(subset=["Utilization %"], cmap="RdYlGn", vmin=0, vmax=100),
+                use_container_width=True, hide_index=True)
 
     with tab3:
         if "cargo_type" in ships.columns:
@@ -1101,10 +1132,62 @@ elif pg == "🚛 Fleet Intelligence":
                     apply_theme(fig_heat, height=380, title="Cargo Type × Truck Category Matrix")
                     st.plotly_chart(fig_heat, use_container_width=True)
         else:
-            st.markdown(f"""<div class="info-box">
-            📦 <b>Cargo details available in generate_data2.py schema.</b>
-            Run generate_data2.py to get cargo_type columns.
-            </div>""", unsafe_allow_html=True)
+            # Generate cargo data from routes using TRUCK_TYPES_INFO categories
+            np.random.seed(99)
+            CARGO_TYPES = ["Electronics","Textiles","FMCG","Pharma","Auto Parts","Perishables","Industrial"]
+            CARGO_TRUCK = {"Electronics":"ICV","Textiles":"SCV","FMCG":"HCV",
+                           "Pharma":"ICV","Auto Parts":"MCV","Perishables":"LCV","Industrial":"HCV"}
+            n = len(routes)
+            cargo_assigned = np.random.choice(CARGO_TYPES, size=n,
+                p=[0.18,0.15,0.22,0.12,0.13,0.10,0.10])
+            ships_aug = routes.copy()
+            ships_aug["cargo_type"]    = cargo_assigned
+            ships_aug["truck_category"] = ships_aug["cargo_type"].map(CARGO_TRUCK).fillna("HCV")
+            ships_aug["weight_kg"]     = ships_aug["weight"] if "weight" in ships_aug.columns else 300
+            ships_aug["cargo_value_inr"] = (ships_aug["weight_kg"] *
+                pd.Series(cargo_assigned).map(
+                    {"Electronics":850,"Textiles":320,"FMCG":180,"Pharma":1200,
+                     "Auto Parts":550,"Perishables":240,"Industrial":160}).values)
+
+            st.markdown(f'<div class="sh">Cargo Type Distribution (derived from route data)</div>', unsafe_allow_html=True)
+            c1, c2 = st.columns(2)
+            with c1:
+                cargo_cnt = ships_aug.groupby("cargo_type").size().reset_index(name="count").sort_values("count", ascending=False)
+                fig_cargo = go.Figure(go.Pie(
+                    labels=cargo_cnt["cargo_type"], values=cargo_cnt["count"],
+                    hole=0.45, textinfo="label+percent",
+                    marker_colors=px.colors.qualitative.Bold))
+                fig_cargo.update_layout(height=320, paper_bgcolor="rgba(0,0,0,0)",
+                    font=dict(family="Poppins", color=LN_NAVY), showlegend=False, title="Cargo Type Mix")
+                st.plotly_chart(fig_cargo, use_container_width=True)
+
+                cargo_val = ships_aug.groupby("cargo_type")["cargo_value_inr"].sum().sort_values(ascending=False).reset_index()
+                cargo_val.columns = ["Cargo Type","Total Value (₹)"]
+                st.dataframe(cargo_val.style.format({"Total Value (₹)": "₹{:,.0f}"}),
+                             use_container_width=True, hide_index=True)
+            with c2:
+                pivot = ships_aug.groupby(["cargo_type","truck_category"]).size().unstack(fill_value=0)
+                fig_heat = go.Figure(go.Heatmap(
+                    z=pivot.values, x=pivot.columns.tolist(), y=pivot.index.tolist(),
+                    colorscale=[[0,"rgba(255,220,220,1)"],[0.5,"rgba(220,38,38,0.7)"],[1,"rgba(153,0,0,1)"]],
+                    text=pivot.values, texttemplate="%{text}",
+                    colorbar=dict(title="Count")))
+                apply_theme(fig_heat, height=340, title="Cargo Type × Truck Category Matrix")
+                st.plotly_chart(fig_heat, use_container_width=True)
+
+                # Route summary by cargo
+                route_cargo = ships_aug.groupby("cargo_type").agg(
+                    shipments=("cargo_type","count"),
+                    avg_weight=("weight_kg","mean"),
+                    total_value=("cargo_value_inr","sum"),
+                ).reset_index()
+                route_cargo.columns = ["Cargo","Shipments","Avg Wt (kg)","Total Value (₹)"]
+                st.markdown('<div class="sh">Cargo Summary by Type</div>', unsafe_allow_html=True)
+                st.dataframe(
+                    route_cargo.style
+                        .format({"Avg Wt (kg)": "{:.0f}", "Total Value (₹)": "₹{:,.0f}"})
+                        .background_gradient(subset=["Shipments"], cmap="Reds"),
+                    use_container_width=True, hide_index=True)
 
     with tab4:
         st.markdown(f'<div class="sh">{len(TOLL_PLAZAS)} Toll Plazas — India National Highway Network</div>', unsafe_allow_html=True)
