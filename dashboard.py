@@ -473,7 +473,7 @@ elif pg == "🤖 LoRRI AI Assistant":
         "Vectorless RAG · LangChain-style Pipeline · Pandas Retrieval · Rule-Based Router"
     )
 
-    # ── SESSION STATE INITIALISATION ─────────────────────────────────────────
+    # ── SESSION STATE INITIALIZATION FIRST ─────────────────────────
     if "msgs" not in st.session_state:
         st.session_state.msgs = []
 
@@ -481,13 +481,13 @@ elif pg == "🤖 LoRRI AI Assistant":
         st.session_state.chip_prompt = None
 
 
-    # ── CHAT HISTORY ────────────────────────────────────────────────────────
+    # ── CHAT HISTORY ───────────────────────────────────────────────
     for role, msg in st.session_state.msgs:
         with st.chat_message(role):
             st.markdown(msg)
 
 
-    # ── CHAT INPUT ──────────────────────────────────────────────────────────
+    # ── CHAT INPUT ─────────────────────────────────────────────────
     prompt = st.chat_input("Ask about LoRRI, fleet data, ₹ costs, routes, SLA...")
 
     if prompt:
@@ -497,15 +497,12 @@ elif pg == "🤖 LoRRI AI Assistant":
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # placeholder assistant response
         response = "LoRRI AI assistant processing your request..."
 
         st.session_state.msgs.append(("assistant", response))
 
         with st.chat_message("assistant"):
             st.markdown(response)
-
-
     # ── FOOTER (PLACED LAST) ────────────────────────────────────────────────
     
 
