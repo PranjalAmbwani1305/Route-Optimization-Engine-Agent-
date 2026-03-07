@@ -525,10 +525,7 @@ elif pg == "🤖 LoRRI AI Assistant":
 
         </div>
 
-        <div style="text-align:center;margin-top:12px;font-size:0.75rem;color:#64748b;">
-        🟢 Last updated: {now}
-        </div>
-
+        
     </div>
     """, unsafe_allow_html=True)
     # ════════════════════════════════════════════════════════════════════════
