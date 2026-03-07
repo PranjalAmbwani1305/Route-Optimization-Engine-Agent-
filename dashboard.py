@@ -350,11 +350,17 @@ html, body, [class*="css"] {{
     background: white !important;
     border-right: 2px solid {LN_BORDER} !important;
 }}
+/* Force logo area to always be on white — never on dark */
 [data-testid="stSidebar"] img {{
     background: white !important;
     border-radius: 8px;
     padding: 4px;
     mix-blend-mode: multiply;
+}}
+/* Hero banner logo — screen blend makes white areas go transparent on dark bg */
+.hero-logo img {{
+    mix-blend-mode: screen;
+    filter: brightness(1.1);
 }}
 .sb-sec {{
     font-size: 0.6rem;
@@ -1549,7 +1555,7 @@ elif pg == "🌿 Carbon & SLA":
             marker=dict(
                 size=hm_df["bubble"].tolist(),
                 color=hm_df["carbon_kg"].tolist(),
-                colorscale="YlOrRd",
+                colorscale=[[0,"rgba(255,200,200,0.3)"],[0.5,"rgba(220,38,38,0.6)"],[1,"rgba(153,0,0,0.9)"]],
                 cmin=0, cmax=float(c_max),
                 opacity=0.55,
                 colorbar=dict(title="CO₂ kg", thickness=10, x=1.0)),
@@ -1891,12 +1897,12 @@ elif pg == "🔮 AI Route Predictor":
         fig_pred.add_trace(go.Scattermap(
             lat=[DEPOT["latitude"],mid_lat+1.5,dst_lat],
             lon=[DEPOT["longitude"],mid_lon-1.5,dst_lon],
-            mode="lines", line=dict(width=2,color="rgba(220,38,38,0.45)",dash="dot"),
+            mode="lines", line=dict(width=2,color="rgba(220,38,38,0.45)"),
             name="Alt 1 (Scenic)"))
         fig_pred.add_trace(go.Scattermap(
             lat=[DEPOT["latitude"],mid_lat-1.0,dst_lat],
             lon=[DEPOT["longitude"],mid_lon+1.0,dst_lon],
-            mode="lines", line=dict(width=2,color="rgba(30,122,191,0.45)",dash="dash"),
+            mode="lines", line=dict(width=2,color="rgba(30,122,191,0.45)"),
             name="Alt 2 (Express)"))
         fig_pred.add_trace(go.Scattermap(
             lat=[DEPOT["latitude"]], lon=[DEPOT["longitude"]],
