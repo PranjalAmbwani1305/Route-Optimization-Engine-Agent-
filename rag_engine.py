@@ -1,278 +1,391 @@
 """
-rag_engine.py
-─────────────────────────────────────────────────────────────────────────────
-Standalone RAG engine for LoRRI Route Optimization Assistant.
-Reads all four CSVs, builds a TF-IDF knowledge base, retrieves top-k chunks
-per query, and calls HuggingFace Llama-3.1-8B for the final answer.
-
-Usage:
-    from rag_engine import get_rag_response, set_hf_key
-
-    set_hf_key("hf_...")
-    answer, sources = get_rag_response("Which vehicle has the most SLA breaches?")
+rag_engine.py  —  LoRRI Vectorless RAG Engine
+Fully offline. No external API. No embeddings. No vectors.
+Pipeline: Rule Router → BM25-lite Retriever → Pandas Query → Local Synthesizer
 """
 
-import re
-import math
 import pandas as pd
 import numpy as np
-import streamlit as st
 
-# ── HuggingFace key (set at runtime from the UI) ──────────────────────────────
-_HF_KEY: str = ""
+# ─────────────────────────────────────────────────────────────────────────────
+# Load data (called once from dashboard.py via st.cache_data)
+# ─────────────────────────────────────────────────────────────────────────────
+def load_data():
+    ships  = pd.read_csv("shipments.csv")
+    routes = pd.read_csv("routes.csv")
+    veh    = pd.read_csv("vehicle_summary.csv")
+    return ships, routes, veh
 
-def set_hf_key(key: str) -> None:
-    global _HF_KEY
-    _HF_KEY = key.strip()
+
+def inr(val):
+    return f"Rs.{val:,.0f}"
+
+
+ROUTE_MAP = {
+    1: "Mumbai → Pune → Nashik → Indore → Bhopal → Agra → Delhi → Vijayawada",
+    2: "Mumbai → Surat → Vadodara → Raipur",
+    3: "Mumbai → Aurangabad → Solapur → Madurai → Jammu",
+    4: "Mumbai → Rajkot → Ahmedabad → Jodhpur → Thiruvananthapuram",
+    5: "Mumbai → Hubli → Mangalore → Bengaluru",
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ① KNOWLEDGE CHUNKS  (static text, no vectors)
+# ─────────────────────────────────────────────────────────────────────────────
+def build_knowledge_chunks(opt, base, veh_sum):
+    return [
+        {
+            "id": "company",
+            "triggers": ["logisticsnow","company","about","who","contact",
+                         "email","phone","website","lorri"],
+            "text": (
+                "COMPANY: LogisticsNow (logisticsnow.in)\n"
+                "Email: connect@logisticsnow.in\n"
+                "Phone: +91-9867773508 / +91-9653620207\n"
+                "LoRRI = Logistics Rating & Intelligence\n"
+                "For Shippers: carrier profiles, ratings, cost savings.\n"
+                "For Carriers: discoverability, business inquiries, reputation."
+            ),
+        },
+        {
+            "id": "optimization",
+            "triggers": ["cvrp","optimize","optimization","weighted","objective",
+                         "score","solver","ortools","heuristic","algorithm"],
+            "text": (
+                "OPTIMIZATION ENGINE: CVRP framework.\n"
+                "Objective: Cost(35%) + Time(30%) + Carbon(20%) + SLA(15%).\n"
+                "Solver: OR-Tools nearest-neighbour + 2-opt local search.\n"
+                "Re-optimization triggers: traffic delay >30% OR priority escalation.\n"
+                "Explainability: permutation-based feature importance (SHAP-style)."
+            ),
+        },
+        {
+            "id": "pricing",
+            "triggers": ["fuel","toll","driver","cost","price","inr",
+                         "rupee","penalty","wage","rs"],
+            "text": (
+                "PRICING (Rs. INR):\n"
+                "Fuel: Rs.12/km | Driver: Rs.180/hr | SLA breach: Rs.500/hr | Toll: variable"
+            ),
+        },
+        {
+            "id": "sla",
+            "triggers": ["sla","late","breach","delay","on time","delivery",
+                         "promise","window","adherence"],
+            "text": (
+                f"SLA PERFORMANCE:\n"
+                f"Optimized: {opt['sla_pct']:.1f}% (baseline {base['sla_pct']:.0f}%)\n"
+                f"Breaches: {opt['breaches']} cities | Penalty: Rs.500/hr\n"
+                f"Total penalties: {inr(veh_sum['sla_penalty'].sum())}\n"
+                f"Windows: HIGH=24hr, MEDIUM=48hr, LOW=72hr"
+            ),
+        },
+        {
+            "id": "carbon",
+            "triggers": ["carbon","co2","emission","green","environment",
+                         "sustainability","eco","tree","pollution"],
+            "text": (
+                f"CARBON:\n"
+                f"Optimized: {opt['carbon_kg']:,.1f} kg | Baseline: {base['carbon_kg']:,.1f} kg\n"
+                f"Saved: {base['carbon_kg']-opt['carbon_kg']:,.1f} kg "
+                f"({(base['carbon_kg']-opt['carbon_kg'])/base['carbon_kg']*100:.1f}%)\n"
+                f"Trees equivalent: {int((base['carbon_kg']-opt['carbon_kg'])/21):,} | "
+                f"Cars off road: {int((base['carbon_kg']-opt['carbon_kg'])/2400)}"
+            ),
+        },
+        {
+            "id": "fleet_summary",
+            "triggers": ["fleet","total","summary","overall","depot","mumbai",
+                         "shipment","truck","vehicle","save","saving","saved",
+                         "baseline","optimized"],
+            "text": (
+                f"FLEET SUMMARY (Mumbai Depot):\n"
+                f"{opt['n_ships']} shipments | {opt['n_vehicles']} trucks\n"
+                f"Optimized: {inr(opt['total_cost'])} | Baseline: {inr(base['total_cost'])}\n"
+                f"Saved: {inr(base['total_cost']-opt['total_cost'])} "
+                f"({(base['total_cost']-opt['total_cost'])/base['total_cost']*100:.1f}%)\n"
+                f"Distance: {opt['distance_km']:,.0f} km (was {base['distance_km']:,.0f} km)"
+            ),
+        },
+        {
+            "id": "traffic",
+            "triggers": ["traffic","jam","congestion","disruption",
+                         "reoptimize","threshold","delay","multiplier"],
+            "text": (
+                "TRAFFIC & RE-OPTIMIZATION:\n"
+                "Triggers when delay >30% or on priority escalation.\n"
+                "Recomputes in ~1-2s via OR-Tools local search.\n"
+                "Risk levels: HIGH >0.7, MONITOR >0.4, STABLE <=0.4"
+            ),
+        },
+        {
+            "id": "cost_saving",
+            "triggers": ["suggest","recommendation","improve","reduce cost",
+                         "save more","tip","advice","better","optimize further"],
+            "text": (
+                "COST SAVING RECOMMENDATIONS:\n"
+                "1. Consolidate Truck 2 & 5 — both under 70% utilization\n"
+                "2. Avoid HIGH-traffic corridors during peak hours\n"
+                "3. Upgrade LOW-priority to 72hr SLA window\n"
+                "4. Use express highway only when savings exceed toll premium\n"
+                "5. Cluster Madurai + Thiruvananthapuram on one southern truck\n"
+                "6. Pre-position trucks at Pune, Ahmedabad hubs"
+            ),
+        },
+    ]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Tokenizer
+# ② BM25-LITE RETRIEVER  (keyword scoring, no embeddings)
 # ─────────────────────────────────────────────────────────────────────────────
-def _tokenize(text: str) -> list[str]:
-    return re.findall(r"[a-z0-9]+", text.lower())
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Knowledge-base builder  (cached so it only runs once per session)
-# ─────────────────────────────────────────────────────────────────────────────
-@st.cache_resource
-def _build_kb():
-    """
-    Load the four CSVs and chunk them into text documents.
-    Returns (docs, tfidf_vecs, idf_dict).
-    """
-    try:
-        ships   = pd.read_csv("shipments.csv")
-        routes  = pd.read_csv("routes.csv")
-        metrics = pd.read_csv("metrics.csv").iloc[0]
-        veh     = pd.read_csv("vehicle_summary.csv")
-    except FileNotFoundError:
-        return [], [], {}
-
-    VEHICLE_CAP = 800
-    docs: list[dict] = []
-
-    # ── 1. Global summary ─────────────────────────────────────────────────────
-    docs.append({"title": "Global Optimization Metrics", "text": (
-        f"LoRRI run: {int(metrics['num_shipments'])} shipments, "
-        f"{int(metrics['num_vehicles'])} vehicles, depot Mumbai. "
-        f"Objective weights: Cost 35%, Time 30%, Carbon 20%, SLA 15%. "
-        f"Baseline distance {metrics['baseline_distance_km']:.1f} km → "
-        f"optimized {metrics['opt_distance_km']:.1f} km "
-        f"(saved {metrics['baseline_distance_km']-metrics['opt_distance_km']:.1f} km, "
-        f"{(metrics['baseline_distance_km']-metrics['opt_distance_km'])/metrics['baseline_distance_km']*100:.1f}%). "
-        f"Baseline cost ₹{metrics['baseline_total_cost']:,.0f} → "
-        f"optimized ₹{metrics['opt_total_cost']:,.0f} "
-        f"(saved ₹{metrics['baseline_total_cost']-metrics['opt_total_cost']:,.0f}, "
-        f"{(metrics['baseline_total_cost']-metrics['opt_total_cost'])/metrics['baseline_total_cost']*100:.1f}%). "
-        f"Carbon: baseline {metrics['baseline_carbon_kg']:.1f} kg → "
-        f"optimized {metrics['opt_carbon_kg']:.1f} kg "
-        f"(reduced {metrics['baseline_carbon_kg']-metrics['opt_carbon_kg']:.1f} kg). "
-        f"SLA adherence: {metrics['baseline_sla_adherence_pct']:.1f}% → {metrics['opt_sla_adherence_pct']:.1f}%."
-    )})
-
-    # ── 2. Cost breakdown ─────────────────────────────────────────────────────
-    docs.append({"title": "Cost Breakdown — Fuel, Toll, Driver", "text": (
-        f"Fuel: baseline ₹{metrics['baseline_fuel_cost']:,.0f}, optimized ₹{metrics['opt_fuel_cost']:,.0f}, "
-        f"saved ₹{metrics['baseline_fuel_cost']-metrics['opt_fuel_cost']:,.0f} at ₹12/km. "
-        f"Toll: baseline ₹{metrics['baseline_toll_cost']:,.0f}, optimized ₹{metrics['opt_toll_cost']:,.0f}, "
-        f"saved ₹{metrics['baseline_toll_cost']-metrics['opt_toll_cost']:,.0f}. "
-        f"Driver: baseline ₹{metrics['baseline_driver_cost']:,.0f}, optimized ₹{metrics['opt_driver_cost']:,.0f}, "
-        f"saved ₹{metrics['baseline_driver_cost']-metrics['opt_driver_cost']:,.0f} at ₹180/hr. "
-        f"SLA penalty rate: ₹500/breach-hour."
-    )})
-
-    # ── 3. Per-vehicle summaries ──────────────────────────────────────────────
-    for _, r in veh.iterrows():
-        docs.append({"title": f"Vehicle {int(r['vehicle'])} Summary", "text": (
-            f"Vehicle {int(r['vehicle'])}: {int(r['stops'])} stops, "
-            f"load {r['load_kg']:.1f} kg ({r['utilization_pct']:.1f}% of {VEHICLE_CAP} kg capacity), "
-            f"distance {r['distance_km']:.1f} km, time {r['time_hr']:.1f} hr, "
-            f"fuel ₹{r['fuel_cost']:,.0f}, toll ₹{r['toll_cost']:,.0f}, "
-            f"driver ₹{r['driver_cost']:,.0f}, SLA penalty ₹{r['sla_penalty']:,.0f}, "
-            f"total ₹{r['total_cost']:,.0f}, carbon {r['carbon_kg']:.1f} kg CO2, "
-            f"SLA breaches {int(r['sla_breaches'])}."
-        )})
-
-    # ── 4. Optimized route per vehicle ────────────────────────────────────────
-    for v in routes["vehicle"].unique():
-        vdf = routes[routes["vehicle"] == v].sort_values("stop_order")
-        stops = []
-        for _, r in vdf.iterrows():
-            stops.append(
-                f"stop {int(r['stop_order'])}: {r['city']} "
-                f"(priority {r['priority']}, {r['weight']:.0f} kg, "
-                f"travel {r['travel_time_hr']:.2f} hr, cost ₹{r['total_cost']:,.0f}, "
-                f"carbon {r['carbon_kg']:.2f} kg, SLA breach {r['sla_breach_hr']:.1f} hr, "
-                f"MO score {r['mo_score']:.4f})"
-            )
-        docs.append({"title": f"Vehicle {v} Optimized Route", "text":
-                     f"Vehicle {v} route: " + " | ".join(stops)})
-
-    # ── 5. Route stops in batches of 6 ────────────────────────────────────────
-    for start in range(0, len(routes), 6):
-        batch = routes.iloc[start:start+6]
-        lines = [
-            f"{r['city']} V{int(r['vehicle'])} stop#{int(r['stop_order'])} "
-            f"prio={r['priority']} wt={r['weight']:.0f}kg "
-            f"time={r['travel_time_hr']:.2f}hr cost=₹{r['total_cost']:.0f} "
-            f"co2={r['carbon_kg']:.2f}kg breach={r['sla_breach_hr']:.1f}hr"
-            for _, r in batch.iterrows()
-        ]
-        docs.append({"title": f"Route Stops {start+1}–{min(start+6, len(routes))}",
-                     "text": " | ".join(lines)})
-
-    # ── 6. HIGH-priority shipments ─────────────────────────────────────────────
-    high = ships[ships["priority"] == "HIGH"]
-    docs.append({"title": "HIGH Priority Shipments", "text":
-        f"{len(high)} HIGH priority cities: " + ", ".join(high["city"].tolist()) +
-        f". Avg weight {high['weight'].mean():.1f} kg. SLA window: 24 hours."
-    })
-
-    # ── 7. Carbon analysis ────────────────────────────────────────────────────
-    top5 = routes.nlargest(5, "carbon_kg")[["city","carbon_kg","vehicle"]].values
-    docs.append({"title": "Carbon Emissions Analysis", "text":
-        f"Total optimized CO2: {metrics['opt_carbon_kg']:.1f} kg. "
-        f"Reduction: {metrics['baseline_carbon_kg']-metrics['opt_carbon_kg']:.1f} kg "
-        f"({(metrics['baseline_carbon_kg']-metrics['opt_carbon_kg'])/metrics['baseline_carbon_kg']*100:.1f}%). "
-        f"Top 5 emitting stops: " +
-        ", ".join(f"{c} ({k:.2f} kg, V{int(v)})" for c, k, v in top5) + "."
-    })
-
-    # ── 8. SLA analysis ───────────────────────────────────────────────────────
-    breached = routes[routes["sla_breach_hr"] > 0]
-    docs.append({"title": "SLA Breach Analysis", "text":
-        f"{len(breached)} SLA breaches total. "
-        f"Optimized adherence: {metrics['opt_sla_adherence_pct']:.1f}% "
-        f"(baseline {metrics['baseline_sla_adherence_pct']:.1f}%). "
-        f"Breached cities: " +
-        (", ".join(breached["city"].tolist()) if len(breached) else "None") +
-        (f". Avg breach: {breached['sla_breach_hr'].mean():.2f} hr." if len(breached) else "")
-    })
-
-    # ── 9. MO score / explainability ─────────────────────────────────────────
-    top10 = routes.nlargest(10, "mo_score")[["city","mo_score","vehicle","priority"]].values
-    docs.append({"title": "MO Score & Explainability", "text":
-        "MO score = 0.30×(time/norm) + 0.35×(cost/norm) + 0.20×(carbon/norm) + 0.15×(SLA/norm). "
-        "Lower = better routing choice. Re-opt triggers on >30% time increase or priority escalation. "
-        "Top 10 hardest stops: " +
-        ", ".join(f"{c} ({s:.4f}, V{int(v)}, {p})" for c, s, v, p in top10) + "."
-    })
-
-    # ── 10. System architecture doc ───────────────────────────────────────────
-    docs.append({"title": "System Architecture & How CVRP Works", "text":
-        "LoRRI uses a Capacitated Vehicle Routing Problem (CVRP) with nearest-neighbor heuristic. "
-        "Each vehicle has 800 kg capacity. The solver departs from Mumbai depot, visits stops "
-        "greedily by lowest MO score, and returns to depot. "
-        "Re-optimization is threshold-based: triggered by traffic disruption (>30% time increase) "
-        "or priority escalation (shipment upgraded to HIGH urgency). "
-        "Features: TF-IDF RAG chatbot, permutation feature importance, SLA breach heatmap, "
-        "carbon scatter analysis, cost waterfall chart, and live risk monitor."
-    })
-
-    # ── Build TF-IDF index ────────────────────────────────────────────────────
-    N = len(docs)
-    tokenized = [_tokenize(d["title"] + " " + d["text"]) for d in docs]
-
-    df_counts: dict[str, int] = {}
-    for toks in tokenized:
-        for t in set(toks):
-            df_counts[t] = df_counts.get(t, 0) + 1
-
-    idf = {t: math.log((N + 1) / (c + 1)) + 1.0 for t, c in df_counts.items()}
-
-    def _tfidf(tokens: list[str]) -> dict[str, float]:
-        tf: dict[str, int] = {}
-        for t in tokens:
-            tf[t] = tf.get(t, 0) + 1
-        n = len(tokens) or 1
-        return {t: (c / n) * idf.get(t, 1.0) for t, c in tf.items()}
-
-    vecs = [_tfidf(toks) for toks in tokenized]
-    return docs, vecs, idf
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Retrieval
-# ─────────────────────────────────────────────────────────────────────────────
-def _cosine(a: dict, b: dict) -> float:
-    dot = sum(a.get(t, 0.0) * v for t, v in b.items())
-    na  = math.sqrt(sum(x*x for x in a.values())) + 1e-9
-    nb  = math.sqrt(sum(x*x for x in b.values())) + 1e-9
-    return dot / (na * nb)
-
-
-def _retrieve(query: str, docs, vecs, idf, top_k: int = 4) -> list[dict]:
-    q_toks = _tokenize(query)
-    q_tf: dict[str, int] = {}
-    for t in q_toks:
-        q_tf[t] = q_tf.get(t, 0) + 1
-    n = len(q_toks) or 1
-    q_vec = {t: (c / n) * idf.get(t, 1.0) for t, c in q_tf.items()}
-
-    scored = [(c, i) for i, v in enumerate(vecs) if (c := _cosine(q_vec, v)) > 0]
-    scored.sort(reverse=True)
-    return [docs[i] for _, i in scored[:top_k]]
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# HuggingFace LLM call
-# ─────────────────────────────────────────────────────────────────────────────
-def _hf_generate(messages: list[dict], system_prompt: str) -> str:
-    if not _HF_KEY:
-        return "⚠️ No HuggingFace API key set. Call `set_hf_key('hf_...')` first."
-    try:
-        from huggingface_hub import InferenceClient
-        client   = InferenceClient(provider="nebius", api_key=_HF_KEY)
-        payload  = [{"role": "system", "content": system_prompt}] + messages
-        response = client.chat.completions.create(
-            model="meta-llama/Meta-Llama-3.1-8B-Instruct",
-            messages=payload,
-            max_tokens=700,
+def rag_retrieve(query: str, chunks: list, top_k: int = 3) -> str:
+    q = query.lower()
+    scored = []
+    for chunk in chunks:
+        score = sum(
+            (2 if len(t.split()) > 1 else 1)
+            for t in chunk["triggers"] if t in q
         )
-        return response.choices[0].message.content
-    except Exception as e:
-        return f"⚠️ HuggingFace API error: {e}"
+        scored.append((score, chunk))
+    scored.sort(key=lambda x: -x[0])
+    tops = [c["text"] for s, c in scored[:top_k] if s > 0]
+    return "\n\n---\n\n".join(tops) if tops else ""
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Public API
+# ③ PANDAS RETRIEVAL  (structured DataFrame queries)
 # ─────────────────────────────────────────────────────────────────────────────
-def get_rag_response(
-    query: str,
-    history: list[dict] | None = None,
-    top_k: int = 4,
-) -> tuple[str, list[str]]:
-    """
-    Retrieve relevant chunks and generate an answer.
+def pandas_retrieve(query: str, routes, veh_sum) -> str:
+    q = query.lower()
+    results = []
 
-    Parameters
-    ----------
-    query   : user question string
-    history : list of {"role": "user"|"assistant", "content": str}
-    top_k   : number of chunks to retrieve
+    # Per-truck detail
+    for v in [1, 2, 3, 4, 5]:
+        if f"truck {v}" in q or f"truck{v}" in q:
+            row = veh_sum[veh_sum["vehicle"] == v]
+            if not row.empty:
+                r  = row.iloc[0]
+                bc = routes[
+                    (routes["vehicle"] == v) & (routes["sla_breach_hr"] > 0)
+                ]["city"].tolist()
+                stops = routes[routes["vehicle"] == v].sort_values("stop_order")[
+                    ["stop_order","city","weight","priority",
+                     "travel_time_hr","fuel_cost","carbon_kg","sla_breach_hr"]
+                ]
+                results.append(
+                    f"TRUCK {v}:\n"
+                    f"Route: {ROUTE_MAP.get(v,'?')}\n"
+                    f"Stops:{int(r['stops'])} | Dist:{r['distance_km']:,.0f}km | "
+                    f"Time:{r['time_hr']:.1f}hr | Load:{r['load_kg']:.0f}kg ({r['utilization_pct']:.0f}%)\n"
+                    f"Fuel:{inr(r['fuel_cost'])} | Toll:{inr(r['toll_cost'])} | "
+                    f"Driver:{inr(r['driver_cost'])} | Penalty:{inr(r['sla_penalty'])}\n"
+                    f"Total:{inr(r['total_cost'])} | CO2:{r['carbon_kg']:.1f}kg\n"
+                    f"Breaches:{int(r['sla_breaches'])} "
+                    f"({'cities: '+', '.join(bc) if bc else 'none — OK'})\n"
+                    f"\nSTOPS:\n{stops.to_string(index=False)}"
+                )
 
-    Returns
-    -------
-    (answer_str, source_title_list)
-    """
-    docs, vecs, idf = _build_kb()
-    if not docs:
-        return ("⚠️ Knowledge base is empty — run generate_data.py and route_solver.py first.", [])
+    # SLA breach cities
+    if any(k in q for k in ["late","breach","which cities","missed sla","cities late"]):
+        bd = routes[routes["sla_breach_hr"] > 0][
+            ["vehicle","city","priority","sla_breach_hr","sla_penalty"]
+        ].copy()
+        if not bd.empty:
+            bd["vehicle"] = bd["vehicle"].apply(lambda v: f"Truck {v}")
+            results.append("SLA BREACHES:\n" + bd.to_string(index=False))
+        else:
+            results.append("SLA BREACHES: None — all on time!")
 
-    retrieved   = _retrieve(query, docs, vecs, idf, top_k=top_k)
-    context_str = "\n\n".join(f"[{d['title']}]\n{d['text']}" for d in retrieved)
-    sources     = [d["title"] for d in retrieved]
+    # Most expensive truck
+    if any(k in q for k in ["most expensive","highest cost","costs most","expensive truck"]):
+        t = veh_sum.loc[veh_sum["total_cost"].idxmax()]
+        results.append(
+            f"MOST EXPENSIVE: Truck {int(t['vehicle'])} — {inr(t['total_cost'])}\n"
+            f"Route: {ROUTE_MAP.get(int(t['vehicle']),'?')}\n"
+            f"Fuel:{inr(t['fuel_cost'])} | Toll:{inr(t['toll_cost'])} | "
+            f"Driver:{inr(t['driver_cost'])} | Penalty:{inr(t['sla_penalty'])}"
+        )
 
-    system_prompt = (
-        "You are LoRRI's Route Intelligence Analyst — an expert in logistics, "
-        "CVRP optimization, SLA management, and carbon footprint reduction. "
-        "Answer using ONLY the provided context. Be concise and cite exact numbers. "
-        "If the context doesn't contain enough information, say so clearly.\n\n"
-        f"=== RETRIEVED CONTEXT ===\n{context_str}\n=== END CONTEXT ==="
+    # Fleet utilization
+    if any(k in q for k in ["utilization","capacity","load","util"]):
+        u = veh_sum[["vehicle","load_kg","utilization_pct"]].copy()
+        u["vehicle"] = u["vehicle"].apply(lambda v: f"Truck {v}")
+        results.append(
+            f"UTILIZATION:\n{u.to_string(index=False)}\n"
+            f"Average: {veh_sum['utilization_pct'].mean():.1f}%"
+        )
+
+    # All trucks comparison
+    if any(k in q for k in ["compare truck","all truck","each truck","per truck","breakdown"]):
+        c = veh_sum[["vehicle","distance_km","total_cost","carbon_kg",
+                     "sla_breaches","utilization_pct"]].copy()
+        c["vehicle"]    = c["vehicle"].apply(lambda v: f"Truck {v}")
+        c["total_cost"] = c["total_cost"].apply(lambda x: f"Rs.{x:,.0f}")
+        results.append("ALL TRUCKS:\n" + c.to_string(index=False))
+
+    return "\n\n".join(results) if results else ""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ④ RULE-BASED ROUTER  (instant answers, no retrieval needed)
+# ─────────────────────────────────────────────────────────────────────────────
+def rule_based_answer(query: str, opt, base, veh_sum, routes, ships):
+    q = query.lower().strip()
+
+    if q in {"hi","hello","hey","namaste","hii","hlo"}:
+        return (
+            f"**Namaste!** I'm the LoRRI AI Assistant.\n\n"
+            f"Fleet: **{opt['n_ships']} shipments**, **{opt['n_vehicles']} trucks**, "
+            f"cost **{inr(opt['total_cost'])}**. Ask me anything!", 99
+        )
+
+    if any(k in q for k in ["contact","email","phone","reach","logisticsnow"]):
+        return (
+            "**LogisticsNow Contact:**\n"
+            "- 🌐 logisticsnow.in\n"
+            "- 📧 connect@logisticsnow.in\n"
+            "- 📞 +91-9867773508 / +91-9653620207", 99
+        )
+
+    if any(k in q for k in ["how much did we save","total saving","how much saved","save in"]):
+        saved = base["total_cost"] - opt["total_cost"]
+        return (
+            f"**Total Savings: {inr(saved)} ({saved/base['total_cost']*100:.1f}% reduction)**\n\n"
+            f"| Category | Baseline | Optimized | Saved |\n|---|---|---|---|\n"
+            f"| Fuel    | {inr(base['fuel_cost'])}   | {inr(opt['fuel_cost'])}   | **{inr(base['fuel_cost']-opt['fuel_cost'])}** |\n"
+            f"| Toll    | {inr(base['toll_cost'])}   | {inr(opt['toll_cost'])}   | **{inr(base['toll_cost']-opt['toll_cost'])}** |\n"
+            f"| Driver  | {inr(base['driver_cost'])} | {inr(opt['driver_cost'])} | **{inr(base['driver_cost']-opt['driver_cost'])}** |\n"
+            f"| **Total** | {inr(base['total_cost'])} | {inr(opt['total_cost'])} | **{inr(saved)}** |", 98
+        )
+
+    if ("carbon" in q or "co2" in q) and any(k in q for k in ["saving","save","reduc","how much"]):
+        s = base["carbon_kg"] - opt["carbon_kg"]
+        return (
+            f"**CO2 Saved: {s:,.1f} kg ({s/base['carbon_kg']*100:.1f}% reduction)**\n\n"
+            f"- Baseline: {base['carbon_kg']:,.1f} kg\n"
+            f"- Optimized: {opt['carbon_kg']:,.1f} kg\n"
+            f"- 🌳 {int(s/21):,} trees equivalent per year\n"
+            f"- 🚗 {int(s/2400)} cars removed from road", 98
+        )
+
+    for v in [1, 2, 3, 4, 5]:
+        if f"truck {v}" in q and "route" in q:
+            r = veh_sum[veh_sum["vehicle"] == v].iloc[0]
+            return (
+                f"**Truck {v} Route:**\n🚛 {ROUTE_MAP[v]}\n\n"
+                f"{int(r['stops'])} stops · {r['distance_km']:,.0f} km · {inr(r['total_cost'])}", 97
+            )
+
+    if "truck 3" in q and any(k in q for k in ["change","why","explain","reason","chose"]):
+        t3 = veh_sum[veh_sum["vehicle"] == 3].iloc[0]
+        bc = routes[(routes["vehicle"]==3)&(routes["sla_breach_hr"]>0)]["city"].tolist()
+        return (
+            f"**Why Truck 3's Route:**\n{ROUTE_MAP[3]}\n\n"
+            f"- Aurangabad & Solapur cluster on the Pune–Hyderabad axis\n"
+            f"- Madurai anchors the deep south leg (no other truck covers it)\n"
+            f"- Jammu: high-priority northern extension\n"
+            f"- CVRP scored: Cost(35%) + Time(30%) + Carbon(20%) + SLA(15%)\n\n"
+            f"**Stats:** {t3['distance_km']:,.0f} km · {inr(t3['total_cost'])} · "
+            f"{t3['carbon_kg']:.0f} kg CO2 · {int(t3['sla_breaches'])} breach\n"
+            + (f"Breach cities: {', '.join(bc)}" if bc else "All SLA met ✅"), 96
+        )
+
+    if any(k in q for k in ["tomorrow","traffic risk","forecast","predict traffic","next day"]):
+        hr = ships[ships["traffic_mult"] > 2.0]["city"].tolist()
+        mr = ships[(ships["traffic_mult"]>1.4)&(ships["traffic_mult"]<=2.0)]["city"].tolist()
+        return (
+            f"**Traffic Risk Forecast:**\n\n"
+            f"🔴 HIGH (>2.0x): {', '.join(hr) if hr else 'None'}\n"
+            f"🟡 MEDIUM (1.4–2.0x): {', '.join(mr[:5]) if mr else 'None'}\n"
+            f"🟢 STABLE: All other corridors\n\n"
+            f"Auto re-optimize triggers at >30% delay threshold.", 90
+        )
+
+    if any(k in q for k in ["which cities","cities late","missed sla","where late","who was late"]):
+        bd = routes[routes["sla_breach_hr"] > 0][
+            ["city","vehicle","sla_breach_hr","sla_penalty"]]
+        if bd.empty:
+            return "**No SLA breaches** — all deliveries on time! ✅", 99
+        lines = [f"**{len(bd)} cities were late:**\n"]
+        for _, r in bd.iterrows():
+            lines.append(
+                f"- **{r['city']}** (Truck {int(r['vehicle'])}) — "
+                f"{r['sla_breach_hr']:.1f}hr late · penalty {inr(r['sla_penalty'])}"
+            )
+        return "\n".join(lines), 97
+
+    if any(k in q for k in ["suggest","recommendation","tip","advice","reduce cost","save more"]):
+        return (
+            "**Cost Saving Recommendations:**\n\n"
+            "1. Consolidate Truck 2 & 5 — both under 70% utilization\n"
+            "2. Avoid HIGH-traffic corridors during peak hours\n"
+            "3. Upgrade LOW-priority shipments to 72hr SLA window\n"
+            "4. Use express highway only when savings exceed toll premium\n"
+            "5. Cluster Madurai + Thiruvananthapuram on one southern truck\n"
+            "6. Pre-position trucks at Pune & Ahmedabad hubs to cut backtracking", 94
+        )
+
+    return None, None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ⑤ LOCAL SYNTHESIZER  (no API call — assembles retrieved context directly)
+# ─────────────────────────────────────────────────────────────────────────────
+def synthesize_answer(query: str, rag_ctx: str, pandas_ctx: str, opt, base) -> str:
+    parts = []
+
+    if pandas_ctx:
+        parts.append(pandas_ctx)
+    if rag_ctx:
+        parts.append(rag_ctx)
+
+    if parts:
+        return "\n\n".join(parts)
+
+    # Generic fallback
+    return (
+        f"**Fleet Summary (Mumbai Depot):**\n\n"
+        f"- **{opt['n_ships']} shipments** | **{opt['n_vehicles']} trucks**\n"
+        f"- Optimized cost: **{inr(opt['total_cost'])}** "
+        f"(saved {inr(base['total_cost']-opt['total_cost'])} vs baseline)\n"
+        f"- SLA adherence: **{opt['sla_pct']:.0f}%**\n"
+        f"- Carbon: **{opt['carbon_kg']:,.1f} kg CO2**\n\n"
+        f"Try asking about a specific truck, SLA breaches, cost savings, "
+        f"carbon, routes, or optimization methodology."
     )
 
-    msgs = list(history or []) + [{"role": "user", "content": query}]
-    answer = _hf_generate(msgs[:-1] + [{"role": "user", "content": query}], system_prompt)
-    return answer, sources
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ⑥ MAIN PIPELINE  — no external API, fully local
+# ─────────────────────────────────────────────────────────────────────────────
+def call_rag_pipeline(query: str, ships, routes, veh_sum, opt, base):
+    """
+    4-step fully offline RAG pipeline.
+    Returns: (reply, confidence_int, source_label, chunks_info)
+    """
+    chunks = build_knowledge_chunks(opt, base, veh_sum)
+
+    # Step 1: Rule-based router (instant)
+    rule_reply, rule_conf = rule_based_answer(query, opt, base, veh_sum, routes, ships)
+    if rule_reply:
+        return rule_reply, rule_conf, "⚡ Rule router", "Instant match"
+
+    # Step 2: BM25-lite keyword retrieval
+    rag_ctx = rag_retrieve(query, chunks, top_k=3)
+
+    # Step 3: Pandas structured retrieval
+    pandas_ctx = pandas_retrieve(query, routes, veh_sum)
+
+    # Source label
+    sources = []
+    if rag_ctx:    sources.append("📚 RAG chunks")
+    if pandas_ctx: sources.append("🐼 Pandas")
+    src_label   = " + ".join(sources) if sources else "🤖 Synthesized"
+    n_chunks    = sum(1 for c in chunks if c["text"] in rag_ctx) if rag_ctx else 0
+    chunks_info = f"{n_chunks} chunk(s) + {'DataFrame rows' if pandas_ctx else 'no structured data'}"
+
+    # Step 4: Local synthesis (NO API CALL)
+    reply = synthesize_answer(query, rag_ctx, pandas_ctx, opt, base)
+    conf  = 92 if (rag_ctx and pandas_ctx) else (88 if (rag_ctx or pandas_ctx) else 72)
+
+    return reply, conf, src_label, chunks_info
