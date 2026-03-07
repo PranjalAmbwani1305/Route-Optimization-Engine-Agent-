@@ -467,27 +467,54 @@ if pg == "🏢 About LoRRI":
 #                         + Clickable Chip Buttons
 # ══════════════════════════════════════════════════════════════════════════════
 elif pg == "🤖 LoRRI AI Assistant":
-    page_header("🤖 LoRRI AI Assistant", "Vectorless RAG · LangChain-style Pipeline · Pandas Retrieval · Rule-Based Router")
-    if pg == "🤖 LoRRI AI Assistant":
 
-    page_header("🤖 LoRRI AI Assistant", "Vectorless RAG · LangChain-style Pipeline · Pandas Retrieval · Rule-Based Router")
+    page_header(
+        "🤖 LoRRI AI Assistant",
+        "Vectorless RAG · LangChain-style Pipeline · Pandas Retrieval · Rule-Based Router"
+    )
 
-    # chat history
-    for role, msg in st.session_state.messages:
+    # ── SESSION STATE INITIALISATION ─────────────────────────────────────────
+    if "msgs" not in st.session_state:
+        st.session_state.msgs = []
+
+    if "chip_prompt" not in st.session_state:
+        st.session_state.chip_prompt = None
+
+
+    # ── CHAT HISTORY ────────────────────────────────────────────────────────
+    for role, msg in st.session_state.msgs:
         with st.chat_message(role):
             st.markdown(msg)
 
-    # user input
+
+    # ── CHAT INPUT ──────────────────────────────────────────────────────────
     prompt = st.chat_input("Ask about LoRRI, fleet data, ₹ costs, routes, SLA...")
 
     if prompt:
+
+        st.session_state.msgs.append(("user", prompt))
+
         with st.chat_message("user"):
             st.markdown(prompt)
 
+        # placeholder assistant response
+        response = "LoRRI AI assistant processing your request..."
+
+        st.session_state.msgs.append(("assistant", response))
+
+        with st.chat_message("assistant"):
+            st.markdown(response)
+
+
+    # ── FOOTER (PLACED LAST) ────────────────────────────────────────────────
+    
+
     st.markdown(f"""
-    <div style="margin-top:30px;">
+    <div style="margin-top:40px;">
+
         <div style="background:{LN_NAVY};color:white;padding:18px 28px;
-        border-radius:10px;display:flex;justify-content:space-between;">
+        border-radius:10px;display:flex;justify-content:space-between;align-items:center;">
+
             <div>
                 <b>Logistics<span style="color:{LN_GREEN};">Now</span></b> · LoRRI AI Route Optimization Engine
                 <div style="font-size:0.8rem;color:#94a3b8;">
@@ -496,20 +523,17 @@ elif pg == "🤖 LoRRI AI Assistant":
             </div>
 
             <div style="font-size:0.85rem;color:#cbd5e1;">
-                connect@logisticsnow.in
+                📧 connect@logisticsnow.in
             </div>
+
         </div>
 
-        <div style="text-align:center;margin-top:10px;font-size:0.75rem;color:#64748b;">
+        <div style="text-align:center;margin-top:12px;font-size:0.75rem;color:#64748b;">
         🟢 Last updated: {now}
         </div>
+
     </div>
     """, unsafe_allow_html=True)
-
-    # ── SESSION STATE INITIALISATION ─────────────────────────────────────────
-    if "msgs"        not in st.session_state: st.session_state.msgs        = []
-    if "chip_prompt" not in st.session_state: st.session_state.chip_prompt = None
-
     # ════════════════════════════════════════════════════════════════════════
     # ① RAG KNOWLEDGE BASE  (plain-text chunks — no vectors needed)
     # ════════════════════════════════════════════════════════════════════════
