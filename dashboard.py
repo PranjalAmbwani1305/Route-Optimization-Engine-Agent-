@@ -374,7 +374,7 @@ def kpi_card(label, value, delta, good=True, ac=None):
 # ─────────────────────────────────────────────────────────────────────────────
 # DATA
 # ─────────────────────────────────────────────────────────────────────────────
-@st.cache_data
+@st.cache_data(ttl=10)
 def load():
     ships  = pd.read_csv("shipments.csv")
     routes = pd.read_csv("routes.csv")
