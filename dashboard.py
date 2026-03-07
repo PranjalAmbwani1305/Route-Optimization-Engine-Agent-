@@ -378,54 +378,6 @@ with st.sidebar:
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TOP BAR + NAVBAR + HERO
-# ─────────────────────────────────────────────────────────────────────────────
-st.markdown(f"""
-<div class="topbar">
-    <div style="display:flex;gap:24px;">
-        <span>✉ connect@logisticsnow.in</span>
-        <span>📞 +91-9867773508 / +91-9653620207</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:16px;">
-        <span style="font-size:0.7rem;letter-spacing:0.05em;">IN · LI · FB · IG</span>
-        <a href="#" style="background:{LN_GREEN};color:white;padding:5px 14px;border-radius:3px;
-                           font-size:0.7rem;font-weight:600;text-decoration:none;">
-            LORRI &nbsp; SCHEDULE A DEMO ›
-        </a>
-    </div>
-</div>
-<div class="navbar">
-    <div class="logo-wrap">
-        <div class="logo-n">LN</div>
-        <div class="logo-text">Logistics<span>Now</span></div>
-    </div>
-    <div class="nav-links">
-        <a class="nav-link" href="#">Home</a>
-        <a class="nav-link" href="#">About Us</a>
-        <a class="nav-link" href="#">Products</a>
-        <a class="nav-link" href="#">Careers</a>
-        <a class="nav-link" href="#">News & Events</a>
-        <a class="nav-link" href="#">Contact Us</a>
-    </div>
-    <div class="nav-cta">LoRRI &nbsp; SCHEDULE A DEMO ›</div>
-</div>
-<div class="hero-banner">
-    <div class="hero-title">LoRRI: <span>AI Route Optimization Engine</span></div>
-    <div class="hero-sub">Dynamic Multi-Objective CVRP · India Logistics Network · Depot: Mumbai · All costs in ₹ INR</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <div class="hero-badge">● MUMBAI HUB: LIVE</div>
-        <div class="hero-badge" style="border-color:#1e7abf;color:#7ec8ff;background:rgba(30,122,191,0.2);">
-            Problem Statement 4 — Synapflow Hackathon
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown(f"""
-<div class="content-area">
-<div class="breadcrumb">
-    📍 <a href="#">Home</a> › <a href="#">Products</a> › <a href="#">LoRRI</a> › AI Route Optimization
-</div>
-""", unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PAGE: ABOUT LORRI
@@ -433,173 +385,91 @@ st.markdown(f"""
 if pg == "🏢 About LoRRI":
     page_header("🏢 About LoRRI", "LogisticsNow · AI-Powered Logistics Intelligence Platform")
 
-    # ── Company Overview ──────────────────────────────────────────────────────
-    st.markdown(f"""
-    <div style="background:white;border:1px solid {LN_BORDER};border-radius:14px;
-                padding:32px 36px;margin-bottom:20px;border-top:4px solid {LN_GREEN};">
-        <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;">
-            <div style="width:46px;height:46px;background:{LN_GREEN};border-radius:10px;
-                        display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">🏢</div>
-            <div>
-                <div style="font-size:1.35rem;font-weight:700;color:{LN_NAVY};">Company Overview</div>
-                <div style="font-size:0.78rem;color:#64748b;">LogisticsNow · India's Premier Logistics Intelligence Platform</div>
-            </div>
-        </div>
-        <p style="font-size:0.9rem;color:#334155;line-height:1.85;margin:0 0 14px 0;">
-            <b style="color:{LN_NAVY};">LogisticsNow</b> is India's leading logistics intelligence company,
-            purpose-built to modernize how shippers and carriers connect, collaborate, and grow.
-            Founded on the belief that <b>data-driven decisions outperform intuition</b>, we deliver
-            technology that turns logistics complexity into competitive advantage.
-        </p>
-        <p style="font-size:0.9rem;color:#334155;line-height:1.85;margin:0;">
-            Our platform serves <b>Fortune 500 manufacturers, leading Indian corporates</b>, and
-            <b>thousands of transporters</b> across every major freight corridor in India —
-            from the Mumbai–Delhi spine to the Southern peninsular network.
-            We are headquartered in Mumbai with operations across all major logistics hubs.
-        </p>
+st.markdown(f"""
+<div style="background:white;border-radius:14px;
+border:1px solid {LN_BORDER};
+padding:34px 36px;margin-bottom:22px;
+border-top:5px solid {LN_GREEN};">
+
+<div style="font-size:1.6rem;font-weight:700;color:{LN_NAVY};margin-bottom:8px;">
+🚚 LoRRI — Logistics Intelligence Platform
+</div>
+
+<div style="font-size:0.9rem;color:#64748b;margin-bottom:18px;">
+AI-Powered Logistics Optimization Engine
+</div>
+
+<p style="font-size:0.92rem;color:#334155;line-height:1.85;margin-bottom:12px;">
+Modern logistics networks generate massive operational data, yet routing decisions are still
+often based on <b>static planning and manual assumptions</b>. This leads to unnecessary fuel costs,
+delivery delays, inefficient truck utilization, and increased carbon emissions.
+</p>
+
+<p style="font-size:0.92rem;color:#334155;line-height:1.85;margin-bottom:0;">
+<b>LoRRI (Logistics Rating & Intelligence)</b> transforms logistics operations into an
+<b>AI-driven decision intelligence platform</b>. By combining real-time data,
+optimization algorithms, and interactive analytics dashboards,
+LoRRI enables organizations to <b>optimize routes, reduce costs,
+improve delivery reliability, and minimize environmental impact</b>.
+</p>
+
+</div>
+""", unsafe_allow_html=True)
+
+
+st.markdown(f'<div class="sh">🌍 Our Vision</div>', unsafe_allow_html=True)
+
+st.markdown(f"""
+<div style="background:{LN_NAVY};border-radius:12px;
+padding:26px 30px;color:white;margin-bottom:24px;">
+
+<p style="font-size:0.92rem;line-height:1.9;color:#cbd5e1;margin:0;">
+Our vision is to build a <b style="color:white;">global logistics intelligence platform</b>
+where transportation networks operate as <b style="color:{LN_GREEN};">
+autonomous, data-driven systems</b>.
+</p>
+
+<p style="font-size:0.92rem;line-height:1.9;color:#cbd5e1;margin-top:12px;">
+By integrating <b style="color:white;">AI optimization</b>, 
+<b style="color:white;">real-time analytics</b>, and 
+<b style="color:white;">sustainability metrics</b>,
+LoRRI empowers supply chains to become more efficient,
+resilient, and environmentally responsible.
+</p>
+
+</div>
+""", unsafe_allow_html=True)
+
+
+st.markdown(f'<div class="sh">⚙️ Key Platform Capabilities</div>', unsafe_allow_html=True)
+
+col1, col2, col3, col4 = st.columns(4)
+
+features = [
+("🚛","AI Route Optimization","Dynamic multi-objective routing balancing cost, time, carbon emissions, and SLA constraints."),
+("📊","Operational Intelligence","Real-time analytics dashboard showing fleet performance, cost efficiency, and route insights."),
+("🌿","Sustainability Monitoring","Measure carbon emissions per route and identify greener transportation strategies."),
+("⚡","Adaptive Re-optimization","Automatically adjust routes during traffic disruptions or priority shipment escalations.")
+]
+
+for col,(icon,title,desc) in zip([col1,col2,col3,col4],features):
+    col.markdown(f"""
+    <div style="background:white;border:1px solid {LN_BORDER};
+    border-radius:12px;padding:18px;height:180px;
+    border-top:3px solid {LN_GREEN};">
+
+    <div style="font-size:1.6rem;margin-bottom:6px;">{icon}</div>
+
+    <div style="font-size:0.85rem;font-weight:700;color:{LN_NAVY};margin-bottom:6px;">
+    {title}
+    </div>
+
+    <div style="font-size:0.75rem;color:#64748b;line-height:1.6;">
+    {desc}
+    </div>
+
     </div>
     """, unsafe_allow_html=True)
-
-    # ── What is LoRRI ─────────────────────────────────────────────────────────
-    c1, c2 = st.columns([3, 2])
-    with c1:
-        st.markdown(f"""
-        <div style="background:white;border:1px solid {LN_BORDER};border-radius:12px;
-                    padding:26px 28px;height:100%;border-top:4px solid #1e7abf;">
-            <div style="font-size:1.05rem;font-weight:700;color:{LN_NAVY};margin-bottom:14px;">
-                🚚 What is LoRRI?
-            </div>
-            <p style="font-size:0.88rem;color:#334155;line-height:1.8;margin:0 0 12px 0;">
-                <b>LoRRI</b> — Logistics Rating & Intelligence — is LogisticsNow's flagship platform
-                that connects Shippers and Manufacturers with Carriers and Transporters through
-                <b>deep data intelligence</b>. It goes beyond simple load boards, offering a
-                <b>structured, rated, and verified ecosystem</b> for Indian freight.
-            </p>
-            <p style="font-size:0.88rem;color:#334155;line-height:1.8;margin:0 0 12px 0;">
-                <b>For Shippers & Manufacturers:</b> Access actionable carrier insights, detailed
-                transporter profiles, industry ratings, and holistic freight analytics that reduce
-                cost and procurement risk across every lane.
-            </p>
-            <p style="font-size:0.88rem;color:#334155;line-height:1.8;margin:0;">
-                <b>For Carriers & Transporters:</b> Get discovered by enterprise shippers,
-                receive business inquiries on your preferred lanes and truck types,
-                build your industry reputation through customer feedback, and take full
-                control of your LoRRI profile.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with c2:
-        st.markdown(f"""
-        <div style="background:{LN_NAVY};border-radius:12px;padding:26px 24px;height:100%;color:white;">
-            <div style="font-size:1.0rem;font-weight:700;margin-bottom:16px;">⚙️ Optimization Weights</div>
-            <div style="font-size:0.75rem;color:#94a3b8;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em;">
-                How every routing decision is scored
-            </div>
-        """, unsafe_allow_html=True)
-        for label, pct, color, desc in [
-            ("💰 Total Cost (₹)", 35, LN_GREEN,  "Fuel · Toll · Driver · SLA Penalties"),
-            ("⏱️ Travel Time",    30, "#1e7abf", "Hours on road + traffic multiplier"),
-            ("🌿 Carbon CO₂",     20, "#27ae60", "kg CO₂ per km by road type"),
-            ("📅 SLA Adherence",  15, "#e67e22", "24hr / 48hr / 72hr delivery windows"),
-        ]:
-            st.markdown(f"""
-            <div style="margin-top:14px;">
-                <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
-                    <span style="font-size:0.82rem;font-weight:600;color:white;">{label}</span>
-                    <span style="font-family:monospace;font-size:0.78rem;color:{color};font-weight:700;">{pct}%</span>
-                </div>
-                <div style="background:rgba(255,255,255,0.1);border-radius:4px;height:7px;overflow:hidden;">
-                    <div style="width:{pct*2.86:.0f}%;height:100%;background:{color};border-radius:4px;"></div>
-                </div>
-                <div style="font-size:0.7rem;color:#94a3b8;margin-top:3px;">{desc}</div>
-            </div>
-            """, unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # ── Our Vision ────────────────────────────────────────────────────────────
-    st.markdown(f"""
-    <div style="background:linear-gradient(135deg,{LN_NAVY} 0%,#1a4a2e 100%);
-                border-radius:14px;padding:30px 36px;margin-bottom:20px;color:white;">
-        <div style="font-size:1.1rem;font-weight:700;margin-bottom:14px;color:white;">🔭 Our Vision</div>
-        <p style="font-size:0.9rem;color:#cbd5e1;line-height:1.9;margin:0 0 14px 0;">
-            We envision a future where <b style="color:white;">every logistics decision in India</b>
-            is powered by intelligence — where trucks run fuller routes, deliveries arrive on time,
-            costs are minimized through optimization rather than negotiation, and carbon footprints
-            shrink as a natural byproduct of smarter planning.
-        </p>
-        <p style="font-size:0.9rem;color:#cbd5e1;line-height:1.9;margin:0;">
-            LoRRI's <b style="color:{LN_GREEN};">AI Route Optimization Engine</b> is our flagship step
-            toward that vision — transforming LoRRI from a logistics intelligence platform into a
-            <b style="color:white;">real-time, proactive decision-making ecosystem</b> that adapts
-            dynamically to India's complex and volatile freight environment.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # ── Platform Capabilities ─────────────────────────────────────────────────
-    st.markdown(sh("🛠️ Platform Capabilities"), unsafe_allow_html=True)
-    cap_cols = st.columns(3)
-    capabilities = [
-        ("🤖", "AI Route Optimization",          "Dynamic multi-objective CVRP engine optimizing millions of route combinations across India"),
-        ("📊", "Fleet Intelligence Analytics",    "Real-time visibility into fleet utilization, performance, and operational efficiency metrics"),
-        ("💰", "Cost Monitoring & Financial Insights", "Live ₹ cost tracking across fuel, tolls, driver wages, and SLA penalty exposure"),
-        ("🌿", "Carbon Emission Tracking",        "Per-truck CO₂ monitoring with sustainability benchmarks and ESG reduction targets"),
-        ("📅", "SLA Compliance Monitoring",       "Delivery promise tracking with automated breach alerts at ₹500/hr penalty rate"),
-        ("🚦", "Real-time Traffic-Aware Routing", "Threshold-based re-optimization triggered when delays exceed 30% on any corridor"),
-    ]
-    for i, (icon, title, desc) in enumerate(capabilities):
-        cap_cols[i % 3].markdown(f"""
-        <div style="background:white;border:1px solid {LN_BORDER};border-radius:10px;
-                    padding:16px 18px;margin-bottom:12px;border-left:3px solid {LN_GREEN};">
-            <div style="font-size:1.2rem;margin-bottom:6px;">{icon}</div>
-            <div style="font-size:0.82rem;font-weight:700;color:{LN_NAVY};margin-bottom:5px;">{title}</div>
-            <div style="font-size:0.76rem;color:#64748b;line-height:1.6;">{desc}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # ── Technology Powering LoRRI ──────────────────────────────────────────────
-    st.markdown(sh("⚡ Technology Powering LoRRI"), unsafe_allow_html=True)
-    for icon, title, desc in [
-        ("🔢", "Multi-objective Route Optimization", "Weighted scoring simultaneously balances cost ₹, travel time, carbon CO₂, and SLA compliance"),
-        ("🚛", "Capacitated Vehicle Routing Logic",  "OR-Tools CVRP solver enforces 800 kg per-truck capacity across all India route assignments"),
-        ("📡", "Real-time Fleet Data Ingestion",     "Live traffic multipliers, shipment priority changes, and depot updates fed continuously into solver"),
-        ("🧠", "AI-driven Routing Decisions",        "Heuristic local search refinements adapt routes dynamically when disruptions occur"),
-        ("🔍", "Explainable AI Insights",            "SHAP-style permutation importance reveals exactly why each route was chosen over alternatives"),
-    ]:
-        st.markdown(f"""
-        <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;
-                    background:white;border:1px solid {LN_BORDER};border-radius:10px;margin-bottom:8px;">
-            <div style="font-size:1.4rem;flex-shrink:0;margin-top:2px;">{icon}</div>
-            <div>
-                <div style="font-size:0.85rem;font-weight:700;color:{LN_NAVY};margin-bottom:3px;">{title}</div>
-                <div style="font-size:0.79rem;color:#64748b;line-height:1.6;">{desc}</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # ── Expected Impact ────────────────────────────────────────────────────────
-    st.markdown(sh("📈 Expected Impact — Industry Benchmarks"), unsafe_allow_html=True)
-    cols = st.columns(4)
-    for col, val, label, color, sub in [
-        (cols[0], "8–20%",   "Distance Reduction",   LN_GREEN,  "VRP-based routing benchmarks"),
-        (cols[1], "5–15%",   "Cost Savings (₹)",     "#1e7abf", "Fuel + Toll + Driver savings"),
-        (cols[2], "↑ SLA",   "Adherence Gains",      "#e67e22", "Delivery promise improvements"),
-        (cols[3], "↑ Fleet", "Utilization Gains",    "#8e44ad", "CO₂ reductions as byproduct"),
-    ]:
-        col.markdown(f"""
-        <div style="background:white;border:1px solid {LN_BORDER};border-radius:12px;padding:20px;
-                    border-top:3px solid {color};text-align:center;
-                    box-shadow:0 2px 8px rgba(0,0,0,0.05);">
-            <div style="font-size:1.8rem;font-weight:800;color:{color};line-height:1;">{val}</div>
-            <div style="font-size:0.78rem;font-weight:700;color:{LN_NAVY};margin:8px 0 4px;">{label}</div>
-            <div style="font-size:0.7rem;color:#94a3b8;line-height:1.5;">{sub}</div>
-        </div>
-        """, unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PAGE: AI ASSISTANT  —  Vectorless RAG + LangChain-style Pipeline
