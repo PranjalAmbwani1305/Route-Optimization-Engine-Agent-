@@ -441,7 +441,7 @@ PRICING MODEL: All costs in Indian Rupees (₹ INR)
 with st.sidebar:
     st.markdown(f"""
     <div class="sb-logo">
-        <img src="https://logisticsnow.in/wp-content/uploads/2020/05/logistics-now-logo.png" style="height:38px;margin-right:6px;">
+        <img src="logo.png" style="height:38px;margin-right:6px;">
         <div class="sb-brand">Logistics<span>Now</span></div>
     </div>
     <div class="sb-sub">LoRRI AI Route Engine</div>
