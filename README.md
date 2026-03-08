@@ -137,9 +137,9 @@ Predictive intelligence for future shipments:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        DATA LAYER                                    │
-│                                                                      │
-│  generate_data.py                                                    │
+│                        DATA LAYER                                   │
+│                                                                     │
+│  generate_data.py                                                   │
 │  ├── shipments.csv       (200 shipments, real Indian cities + INR)  │
 │  ├── vehicles.csv        (35 trucks, 7 LoRRI categories)            │
 │  ├── lanes.csv           (21 NH corridors + state roads + tolls)    │
@@ -147,9 +147,9 @@ Predictive intelligence for future shipments:
 └─────────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────────┐
-│                     OPTIMIZATION ENGINE                              │
-│                                                                      │
-│  route_solver.py                                                     │
+│                     OPTIMIZATION ENGINE                             │
+│                                                                     │
+│  route_solver.py                                                    │
 │  ├── VRPTW Algorithm     (OR-Tools / NumPy)                         │
 │  ├── Multi-objective     (distance + cost + time + CO₂ + priority)  │
 │  ├── Stochastic Module   (Monte Carlo delay simulation)             │
@@ -158,17 +158,17 @@ Predictive intelligence for future shipments:
 └─────────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         RAG LAYER                                    │
-│                                                                      │
-│  rag_engine.py                                                       │
+│                         RAG LAYER                                   │
+│                                                                     │
+│  rag_engine.py                                                      │
 │  ├── Document Indexing   (shipments + routes + metrics → vector DB) │
 │  ├── Query Processing    (natural language → retrieval → answer)    │
 │  └── LLM Response        (grounded, citation-backed answers)        │
 └─────────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────────┐
-│                      DASHBOARD LAYER                                 │
-│                                                                      │
+│                      DASHBOARD LAYER                                │
+│                                                                     │
 │  dashboard.py  (Streamlit + Plotly)                                 │
 │  ├── About LoRRI                                                    │
 │  ├── LoRRI AI Assistant (RAG chatbot)                               │
@@ -453,7 +453,6 @@ Integrate Hindi support into the RAG AI agent using LangChain, enabling local dr
 
 ## 👥 Team
 
-Built for the **LogisticsNow Hackathon** · Problem Statement #4 · AI Route Optimization Engine
 
 | Name | Role | Primary Contributions |
 |---|---|---|
