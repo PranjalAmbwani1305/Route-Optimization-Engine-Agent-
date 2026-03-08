@@ -1,4 +1,4 @@
-# 🚚 LoRRI — AI-Powered Route Optimization Engine
+# LoRRI — AI-Powered Route Optimization Engine
 
 > **LogisticsNow Hackathon Submission** · AI Route Optimization Engine · Problem Statement #4
 
@@ -79,7 +79,7 @@ The system operates on a four-layer pipeline:
 
 ---
 
-## ✨ Key Features
+##  Key Features
 
 ### 1. 🗺️ Route Map & Visualization
 Interactive Plotly map of India showing all optimized delivery routes. Color-coded by vehicle, with stop sequencing, origin/destination markers, and corridor-level detail (highway, road quality, distance, toll cost).
@@ -205,7 +205,7 @@ LoRRI Platform (lorri.in)
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology | Purpose |
 |---|---|---|
@@ -222,7 +222,7 @@ LoRRI Platform (lorri.in)
 
 ---
 
-## 📦 Deliverables Checklist
+##  Deliverables Checklist
 
 ### ✅ Deliverable 1 — AI-Powered Optimization Engine Prototype
 
@@ -344,7 +344,7 @@ The optimization engine demonstrates measurable improvements across all five req
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
@@ -432,7 +432,7 @@ Route-Optimization-Engine-Agent-/
 
 ---
 
-## 🔮 Future Roadmap
+##  Future Roadmap
 
 **Phase 1 — Live Data Integration**
 Replace `generate_data.py` with a LoRRI API connector pulling real shipment orders, carrier availability, and freight rates. Everything downstream — optimizer, RAG agent, dashboard — works unchanged.
