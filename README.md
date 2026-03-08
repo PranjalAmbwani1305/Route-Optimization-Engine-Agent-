@@ -451,6 +451,20 @@ Integrate Hindi support into the RAG AI agent using LangChain, enabling local dr
 
 <div align="center">
 
+## 👥 Team
+
+Built for the **LogisticsNow Hackathon** · Problem Statement #4 · AI Route Optimization Engine
+
+| Name | Role | Primary Contributions |
+|---|---|---|
+| **Pranjal Ambwani** | 🧠 Lead Backend & Optimization | Architected the Optimization Core using OR-Tools and NumPy to solve multi-objective CVRP/VRPTW problems. Developed the Re-optimization Simulator for dynamic route adjustments. |
+| **Swadha Singh** | 📊 Data Engineering & Frontend | Engineered the India-Realistic Data Pipeline (30 cities, real NH tolls, INR pricing). Built the Streamlit Interactive Intelligence Dashboard featuring route mapping and KPI visualizations. |
+| **[Team Member 3]** | 🤖 AI Agent & RAG Architect | Implemented the RAG-Powered AI Assistant using LangChain and FAISS. Developed the Explainability Layer (XAI) to provide natural language reasoning for every routing decision. |
+| **[Team Member 4]** | 📈 Predictive Analytics & DevOps | Developed the AI Route Predictor for 90-day demand forecasting and SLA risk scoring. Handled system containerization and deployment to Streamlit Cloud. |
+
+---
+<div align="center">
+
 **Built with ❤️ for India's logistics ecosystem**
 
 *LoRRI — Logistics Rating & Intelligence · India's Premier Freight Intelligence Platform*
